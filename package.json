@@ -1,0 +1,40 @@
+{
+    "name": "kipphi-apparatus",
+    "version": "2.1.4-web",
+    "description": "KipPhi Apparatus - Web Version (Phigros Chart Editor)",
+    "type": "module",
+    "scripts": {
+        "dev": "vite dev",
+        "build": "vite build",
+        "preview": "vite preview",
+        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+        "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+        "watchLocales": "bun scripts/type-i18n --watch",
+        "locales": "bun scripts/type-i18n"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@lucide/svelte": "^0.548.0",
+        "jszip": "^3.10.1",
+        "mime": "^4.1.0",
+        "svelte-i18n": "^4.0.1",
+        "svelte-portal": "^2.2.1",
+        "yaml": "^2.8.2",
+        "kipphi": "2.1.4",
+        "kipphi-player": "2.1.4",
+        "kipphi-canvas-editor": "2.1.4"
+    },
+    "devDependencies": {
+        "@internationalized/date": "^3.11.0",
+        "@sveltejs/adapter-static": "^3.0.10",
+        "@sveltejs/kit": "^2.53.4",
+        "@sveltejs/vite-plugin-svelte": "^5.1.1",
+        "@types/node": "^25.5.0",
+        "clsx": "^2.1.1",
+        "less": "^4.5.1",
+        "svelte": "^5.53.6",
+        "svelte-check": "^4.4.4",
+        "typescript": "~5.6.3",
+        "vite": "^6.4.1"
+    }
+}
