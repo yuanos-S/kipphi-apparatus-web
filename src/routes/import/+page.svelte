@@ -2,6 +2,7 @@
     import mime from "mime";
 
     import { goto } from "$app/navigation";
+    import { base } from "$app/paths";
     import { getExtension } from "#/util";
 
     import { type PageData } from "./$types";
@@ -74,7 +75,7 @@
 
         success = true;
 
-        setTimeout(() => goto(`/charts/${idInput.value}`), 3000);
+        setTimeout(() => goto(`${base}/charts/${idInput.value}`), 3000);
     }
     async function createWithArchive() {
         if (!processing) {
@@ -158,7 +159,7 @@
             await saveBinaryFileToChart(id, file.name, new Uint8Array(file.buffer));
         }
         success = true;
-        setTimeout(() => goto(`/charts/${id}`), 3000);
+        setTimeout(() => goto(`${base}/charts/${id}`), 3000);
     }
 
     function getTypeAndTitle(content: string): ["RPE" | "KPA1" | "KPA2", string] {

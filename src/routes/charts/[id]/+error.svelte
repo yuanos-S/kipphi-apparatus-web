@@ -1,6 +1,7 @@
 <script>
     import { _ } from "#/i18n";
-    import { page } from "$app/state"; 
+    import { page } from "$app/state";
+    import { base } from "$app/paths";
 
 </script>
 <span style="font-size: large;">{$_("error.chart")}</span>
@@ -9,4 +10,4 @@
         {page.error?.stack ?? page.error}
     </div>
 </div>
-<a href="/">{$_("general.return")}</a>
+<a href="{base}/">{$_("general.return")}</a>

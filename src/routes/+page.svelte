@@ -4,6 +4,7 @@
   import ImageLoader from "#/components/ImageLoader.svelte";
   import Navigator from "#/components/Navigator.svelte";
   import { Settings } from "@lucide/svelte";
+  import { base } from "$app/paths";
 
   let { data }: { data: PageData } = $props();
   let selectedChart = undefined;
@@ -31,13 +32,13 @@
               {chart.title} ({chart.identifier}, {chart.type})
             </div>
             <div class="chart-operations">
-              <a href="/charts/{chart.identifier}" class="edit-link"
+              <a href="{base}/charts/{chart.identifier}" class="edit-link"
                 >{$_("chartIndex.charts.edit")}</a
               >
-              <a class="export-link" href="/charts/{chart.identifier}/export"
+              <a class="export-link" href="{base}/charts/{chart.identifier}/export"
                 >{$_("chartIndex.charts.export")}</a
               >
-              <a href="/charts/{chart.identifier}/delete" class="delete-link"
+              <a href="{base}/charts/{chart.identifier}/delete" class="delete-link"
                 >{$_("chartIndex.charts.delete")}</a
               >
             </div>

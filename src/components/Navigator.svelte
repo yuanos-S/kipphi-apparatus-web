@@ -1,9 +1,10 @@
 <script lang="ts">
     import { _ } from "#/i18n";
+    import { base } from "$app/paths";
 </script>
 
 <nav>
-<a href="/" id="logo"><img src="/icon.svg" alt="Kipphi Apparatus"></a>
+<a href="{base}/" id="logo"><img src="{base}/icon.svg" alt="Kipphi Apparatus"></a>
 <header>KPA</header>
     <slot/>
 </nav>

@@ -5,6 +5,7 @@
     import { disposeChart as delChart } from "#/background";
     import ImageLoader from "#/components/ImageLoader.svelte";
     import DestructiveButton from "#/components/buttons/DestructiveButton.svelte";
+    import { base } from "$app/paths";
 
     const { data }: { data: PageData } = $props();
     async function deleteChart() {
@@ -12,7 +13,7 @@
             return;
         }
         await delChart(data.chartInfo.identifier);
-        window.location.href = "/";
+        window.location.href = `${base}/`;
     }
 </script>
 

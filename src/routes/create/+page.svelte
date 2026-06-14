@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { base } from "$app/paths";
   import { getExtension } from "#/util"
 
   import { type PageData } from "./$types";
@@ -196,7 +197,7 @@
 
     success = true;
     setTimeout(() => {
-      goto(`/charts/${id}`);
+      goto(`${base}/charts/${id}`);
     }, 3000);
 
   }

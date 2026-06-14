@@ -10,6 +10,7 @@
     import Button from "#/components/buttons/Button.svelte";
     import DestructiveButton from "#/components/buttons/DestructiveButton.svelte";
     import { goto } from "$app/navigation";
+    import { base } from "$app/paths";
     import TextSwitchButton from "#/components/IconButtons/TextSwitchButton.svelte";
     import Tooltip from "#/components/Tooltip.svelte";
     import { downloadFile } from "#/background";
@@ -136,7 +137,7 @@
     () => {
         if (target.modified) {
             if (confirm($_("main.chart.confirm"))) {
-                goto("/");
+                goto(`${base}/`);
             }
         } else {
             goto("/");
