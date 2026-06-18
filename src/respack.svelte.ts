@@ -1,8 +1,13 @@
 import { Respack } from "kipphi-player";
 import { unzip } from "./uncompress";
-import { getFileInRespack } from "./background";
+import { getFileInRespack, setAppBase } from "./background";
 import { KPASettings } from "./settings.svelte";
 import { writable, type Writable } from "svelte/store";
+import { base } from "$app/paths";
+import { get } from "svelte/store";
+
+// Initialize base path for background.ts fetch calls
+setAppBase(base);
 
 export let respack: Respack;
 export let respackId: Writable<string> = writable("Default");
@@ -13,7 +18,7 @@ export async function useDefaultRespack() {
             if (filename.endsWith(".ogg")) {
                 return null;
             }
-            const res = await fetch(`/default/${filename}`);
+            const res = await fetch(`${base}/default/${filename}`);
             if (!res.ok) {
                 return null;
             }

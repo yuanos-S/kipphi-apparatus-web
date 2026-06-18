@@ -6,6 +6,10 @@ import { getExtensionFromName, getMimeTypeFromName } from "#/util";
 import { Chart, type ChartDataKPA, type ChartDataKPA2, type ChartDataRPE } from "kipphi";
 import { unzip } from "./uncompress";
 
+// Base path for GitHub Pages deployment (set from respack.svelte.ts on init)
+let APP_BASE = "";
+export function setAppBase(b: string) { APP_BASE = b; }
+
 export interface ChartMetadata {
     title: string;
     chart: string;
@@ -496,7 +500,7 @@ export async function queryRespackList() {
 
 export async function getFileInRespack(respackName: string, filename: string) {
     if (respackName === "Default") {
-        return await (await fetch("/default/" + filename)).blob();
+        return await (await fetch(`${APP_BASE}/default/${filename}`)).blob();
     }
     const data = await dbGet(STORE_RESPACKS, `${respackName}/${filename}`);
     if (!data) return null;

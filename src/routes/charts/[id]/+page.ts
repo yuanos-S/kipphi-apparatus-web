@@ -4,6 +4,7 @@ import type { PageLoad } from "./$types";
 import { setID } from "./store.svelte";
 import { KPAError } from "kipphi";
 import { error } from "@sveltejs/kit";
+import { base } from "$app/paths";
 
 export const load: PageLoad = async (event) => {
     const chartId = event.params.id;
@@ -16,14 +17,14 @@ export const load: PageLoad = async (event) => {
             chart,
             music,
             illustration,
-            tap: "/Tap.wav",
-            drag: "/Drag.wav",
-            flick: "/Flick.wav",
-            anchorImg: "/Anchor.png",
-            belowImg: "/Below.png",
-            selectNoteImg: "/selectNote.png",
-            startNodeImg: "/South.png",
-            endNodeImg: "/North.png",
+            tap: `${base}/Tap.wav`,
+            drag: `${base}/Drag.wav`,
+            flick: `${base}/Flick.wav`,
+            anchorImg: `${base}/Anchor.png`,
+            belowImg: `${base}/Below.png`,
+            selectNoteImg: `${base}/selectNote.png`,
+            startNodeImg: `${base}/South.png`,
+            endNodeImg: `${base}/North.png`,
         };
     } catch (e) {
         error(500, e)
