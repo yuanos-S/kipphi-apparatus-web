@@ -48,45 +48,57 @@ let {
     data
 }: {data: PageData} = $props();
 
+let loadError: string | null = $state(null);
+let loading: boolean = $state(true);
+
 
 
 const audio = new Audio(URL.createObjectURL(data.music));
 audio.addEventListener("timeupdate", () => {
-    if (!player.playing) {
+    if (!player?.playing) {
         return;
     }
     pre0 = 0;
     progressBar.value = audio.currentTime + '';
 });
 audio.addEventListener("ended", () => {
-    player.pause();
+    player?.pause();
     isPlaying = false;
 })
-// 这里启用了实验性功能，随时都有可能出现破坏性更改，如果出现，需要修改此处
-await waitRespack();
-const illustration = await createImageBitmap(data.illustration);
-let audioProcessor: AudioProcessor;
-if (respack.TAP_SE && respack.DRAG_SE && respack.FLICK_SE) {
-    audioProcessor = AudioProcessor.fromRespack(respack)
-} else {
-    audioProcessor = new AudioProcessor();
-    await audioProcessor.init({
-        tap: data.tap,
-        drag: data.drag,
-        flick: data.flick,
-    });
-}
-console.log(audioProcessor.tap)
 
-await Images.loadAndOptimize({
-    anchor: data.anchorImg,
-    below: data.belowImg
-});
-await Images.initImagesForEditor({
-    selectNote: data.selectNoteImg,
-    startNode: data.startNodeImg,
-    endNode: data.endNodeImg
-})
+// 初始化资源包、图片、音频处理器 — 包在 try-catch 里防止白屏
+let illustration: ImageBitmap;
+let audioProcessor: AudioProcessor;
+
+try {
+    // 这里启用了实验性功能，随时都有可能出现破坏性更改，如果出现，需要修改此处
+    await waitRespack();
+    illustration = await createImageBitmap(data.illustration);
+    if (respack?.TAP_SE && respack?.DRAG_SE && respack?.FLICK_SE) {
+        audioProcessor = AudioProcessor.fromRespack(respack);
+    } else {
+        audioProcessor = new AudioProcessor();
+        await audioProcessor.init({
+            tap: data.tap,
+            drag: data.drag,
+            flick: data.flick,
+        });
+    }
+
+    await Images.loadAndOptimize({
+        anchor: data.anchorImg,
+        below: data.belowImg
+    });
+    await Images.initImagesForEditor({
+        selectNote: data.selectNoteImg,
+        startNode: data.startNodeImg,
+        endNode: data.endNodeImg
+    });
+} catch (e) {
+    loadError = e instanceof Error ? e.message : String(e);
+    console.error("Editor init failed:", e);
+}
+loading = false;
 
 
 // @ts-expect-error 仅供调试
@@ -508,6 +520,17 @@ updateTip();
 
 </script>
 
+{#if loading}
+<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:2rem;color:#333;">
+    Loading editor...
+</div>
+{:else if loadError}
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:2em;font-size:1.2rem;color:#c00;">
+    <h2>Editor failed to load</h2>
+    <pre style="white-space:pre-wrap;max-width:80%;background:#f5f5f5;padding:1em;border-radius:4px;">{loadError}</pre>
+    <a href="../../../" style="margin-top:1em;color:#6df;">Return to home</a>
+</div>
+{:else}
 <main class="container">
     <div id="inner" onwheel={handleWheel} style:--aspect-ratio={aspect}>
         <canvas bind:this={playerCanvas} id="player" width={playerWidth} height={KPASettings.playerHeight}>Your device does not support the HTML5 canvas element.</canvas>
@@ -701,6 +724,7 @@ updateTip();
         <Redo2 size={"4vh"} opacity={redoAvailable ? 1 : 0.2} onclick={() => operationList.redo()}/>
     </div>
 </main>
+{/if}
 
 <style lang="less">
     :root {
