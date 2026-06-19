@@ -183,22 +183,30 @@
       return;
     }
 
-    await saveTextFileToChart(id, "metadata.json", JSON.stringify({
-      "chart": "chart.kpa.json",
-      "illustration": `illustration.${imageExt}`,
-      "music": `music.${audioExt}`,
-      "title": nameInput.value.trim(),
-      "type": "KPA2",
-      "durationSecs": chart.duration
-    } satisfies ChartMetadata));
-    await saveTextFileToChart(id, "chart.kpa.json", chartData);
-    await saveBinaryFileToChart(id, `illustration.${imageExt}`, new Uint8Array(await illustration.arrayBuffer()));
-    await saveBinaryFileToChart(id, `music.${audioExt}`, new Uint8Array(await music.arrayBuffer()));
+    // 并行：读取文件内容 + 写入谱面 JSON 和 metadata
+    const [illustrationBuf, musicBuf] = await Promise.all([
+      illustration.arrayBuffer(),
+      music.arrayBuffer(),
+    ]);
+
+    await Promise.all([
+      saveTextFileToChart(id, "metadata.json", JSON.stringify({
+        "chart": "chart.kpa.json",
+        "illustration": `illustration.${imageExt}`,
+        "music": `music.${audioExt}`,
+        "title": nameInput.value.trim(),
+        "type": "KPA2",
+        "durationSecs": chart.duration
+      } satisfies ChartMetadata)),
+      saveTextFileToChart(id, "chart.kpa.json", chartData),
+      saveBinaryFileToChart(id, `illustration.${imageExt}`, new Uint8Array(illustrationBuf)),
+      saveBinaryFileToChart(id, `music.${audioExt}`, new Uint8Array(musicBuf)),
+    ]);
 
     success = true;
     setTimeout(() => {
       goto(`${base}/charts/${id}`);
-    }, 3000);
+    }, 1000);
 
   }
 

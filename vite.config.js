@@ -43,7 +43,17 @@ export default defineConfig(async () => ({
     strictPort: true,
   },
   build: {
-    minify: false,
+    minify: "esbuild",
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "kipphi-core": ["kipphi"],
+          "kipphi-player": ["kipphi-player"],
+          "kipphi-editor": ["kipphi-canvas-editor"],
+        },
+      },
+    },
   },
   define: {
     "__APP_VERSION": JSON.stringify("2.1.4-web"),

@@ -12,7 +12,20 @@ export const load: PageLoad = async (event) => {
     // 防止缓冲区堆积错误
     KPAError.flush();
     try {
-        const {chart, music, illustration} = await getChartProject(chartId)
+        // 并行：IndexedDB 读取谱面数据 + fetch 静态资源
+        const [chartProject, tapRes, dragRes, flickRes, anchorRes, belowRes, selectNoteRes, southRes, northRes] = await Promise.all([
+            getChartProject(chartId),
+            fetch(`${base}/Tap.wav`),
+            fetch(`${base}/Drag.wav`),
+            fetch(`${base}/Flick.wav`),
+            fetch(`${base}/Anchor.png`),
+            fetch(`${base}/Below.png`),
+            fetch(`${base}/selectNote.png`),
+            fetch(`${base}/South.png`),
+            fetch(`${base}/North.png`),
+        ]);
+
+        const {chart, music, illustration} = chartProject;
         return {
             chart,
             music,
@@ -30,8 +43,3 @@ export const load: PageLoad = async (event) => {
         error(500, e)
     }
 };
-
-
-
-
-

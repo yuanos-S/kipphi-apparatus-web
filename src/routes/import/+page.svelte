@@ -75,7 +75,7 @@
 
         success = true;
 
-        setTimeout(() => goto(`${base}/charts/${idInput.value}`), 3000);
+        setTimeout(() => goto(`${base}/charts/${idInput.value}`), 1000);
     }
     async function createWithArchive() {
         if (!processing) {
@@ -159,7 +159,7 @@
             await saveBinaryFileToChart(id, file.name, new Uint8Array(file.buffer));
         }
         success = true;
-        setTimeout(() => goto(`${base}/charts/${id}`), 3000);
+        setTimeout(() => goto(`${base}/charts/${id}`), 1000);
     }
 
     function getTypeAndTitle(content: string): ["RPE" | "KPA1" | "KPA2", string] {
@@ -213,10 +213,13 @@
             return;
         }
 
-        await saveTextFileToChart(id, "metadata.json", JSON.stringify(metadata, null, 4));
-        await saveTextFileToChart(id, chartName, chartContent);
-        await saveAFileToChart(id, musicName, music);
-        await saveAFileToChart(id, illustrationName, illustration);
+        // 并行写入所有文件
+        await Promise.all([
+            saveTextFileToChart(id, "metadata.json", JSON.stringify(metadata, null, 4)),
+            saveTextFileToChart(id, chartName, chartContent),
+            saveAFileToChart(id, musicName, music),
+            saveAFileToChart(id, illustrationName, illustration),
+        ]);
         return id;
     }
 

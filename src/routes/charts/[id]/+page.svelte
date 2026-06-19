@@ -66,34 +66,37 @@ audio.addEventListener("ended", () => {
     isPlaying = false;
 })
 
-// 初始化资源包、图片、音频处理器 — 包在 try-catch 里防止白屏
+// 初始化资源包、图片、音频处理器 — 并行加载加速启动
 let illustration: ImageBitmap;
 let audioProcessor: AudioProcessor;
 
 try {
-    // 这里启用了实验性功能，随时都有可能出现破坏性更改，如果出现，需要修改此处
-    await waitRespack();
-    illustration = await createImageBitmap(data.illustration);
+    // 并行执行不相互依赖的初始化任务
+    const [_, imgBmp] = await Promise.all([
+        waitRespack(),
+        createImageBitmap(data.illustration),
+    ]);
+    illustration = imgBmp;
+
+    // 资源包和图片都准备好后，并行初始化音频和图片
     if (respack?.TAP_SE && respack?.DRAG_SE && respack?.FLICK_SE) {
         audioProcessor = AudioProcessor.fromRespack(respack);
     } else {
         audioProcessor = new AudioProcessor();
-        await audioProcessor.init({
-            tap: data.tap,
-            drag: data.drag,
-            flick: data.flick,
-        });
     }
 
-    await Images.loadAndOptimize({
-        anchor: data.anchorImg,
-        below: data.belowImg
-    });
-    await Images.initImagesForEditor({
-        selectNote: data.selectNoteImg,
-        startNode: data.startNodeImg,
-        endNode: data.endNodeImg
-    });
+    // 并行加载音频处理器和编辑器图片
+    await Promise.all([
+        respack?.TAP_SE && respack?.DRAG_SE && respack?.FLICK_SE
+            ? Promise.resolve()
+            : audioProcessor.init({ tap: data.tap, drag: data.drag, flick: data.flick }),
+        Images.loadAndOptimize({ anchor: data.anchorImg, below: data.belowImg }),
+        Images.initImagesForEditor({
+            selectNote: data.selectNoteImg,
+            startNode: data.startNodeImg,
+            endNode: data.endNodeImg
+        }),
+    ]);
 } catch (e) {
     loadError = e instanceof Error ? e.message : String(e);
     console.error("Editor init failed:", e);
