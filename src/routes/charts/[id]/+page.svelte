@@ -468,6 +468,16 @@ onMount(async () => {
 
     EditorGlobalInit(notesEditor, eventSequenceEditors, operationList, player);
     restoreStates();
+
+    // 初始渲染：确保 canvas 在页面加载后立即显示内容，不需要鼠标 hover 触发
+    requestAnimationFrame(() => {
+        player.render();
+        if (showingGrid) {
+            notesEditor.draw(player.renderingBeats);
+            eventSequenceEditors.draw(player.renderingBeats);
+        }
+    });
+
     // 释放内存
     // data.chart = null;
 });
