@@ -1,4 +1,5 @@
 # 奇谱发生器/Kipphi Apparatus 2
+此文件是基于奇谱发生器（Kipphi Apparatus 2）进行web移植，[点击查看原版](https://github.com/TeamZincs/kipphi-apparatus)以下为奇谱发生器-web端的介绍
 [点此查看官方 Wiki 的介绍](https://pgrfm.miraheze.org/wiki/奇谱发生器)
 
 奇谱发生器（KPA）是一款基于 Tauri + Svelte 架构的 Phigros 制谱器。项目优势：
