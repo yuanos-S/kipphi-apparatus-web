@@ -41,7 +41,9 @@ import { Sidebar, init as EditorGlobalInit, SecondarySidebar, restoreStates,
     import { respack, waitRespack } from "#/respack.svelte";
     import { fetchTexture } from "#/background";
     import Errors from "./Errors.svelte";
-    import { Redo2, Undo2 } from "@lucide/svelte";
+    import { Redo2, Undo2, Home } from "@lucide/svelte";
+    import { goto } from "$app/navigation";
+    import { base } from "$app/paths";
 
 
 let {
@@ -524,14 +526,15 @@ updateTip();
 </script>
 
 {#if loading}
-<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:2rem;color:#333;">
-    Loading editor...
+<div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <p>{$_("general.loading") ?? "Loading editor..."}</p>
 </div>
 {:else if loadError}
-<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:2em;font-size:1.2rem;color:#c00;">
+<div class="error-screen">
     <h2>Editor failed to load</h2>
-    <pre style="white-space:pre-wrap;max-width:80%;background:#f5f5f5;padding:1em;border-radius:4px;">{loadError}</pre>
-    <a href="../../../" style="margin-top:1em;color:#6df;">Return to home</a>
+    <pre>{loadError}</pre>
+    <a href="{base}/" class="return-link">Return to home</a>
 </div>
 {:else}
 <main class="container">
@@ -723,8 +726,13 @@ updateTip();
     </div>
     <div id="secondary-footer">
         <span id="tips" onclick={() => {clearTimeout(timeout);updateTip()}}>Tips: {Constants.tips[tipIndex]}</span>
-        <Undo2 size={"4vh"} opacity={undoAvailable ? 1 : 0.2} onclick={() => operationList.undo()}/>
-        <Redo2 size={"4vh"} opacity={redoAvailable ? 1 : 0.2} onclick={() => operationList.redo()}/>
+        <div class="footer-actions">
+            <button class="home-btn" title={$_("general.return") ?? "Return home"} onclick={() => goto(`${base}/`)}>
+                <Home size={"3.5vh"} />
+            </button>
+            <Undo2 size={"4vh"} opacity={undoAvailable ? 1 : 0.2} onclick={() => operationList.undo()}/>
+            <Redo2 size={"4vh"} opacity={redoAvailable ? 1 : 0.2} onclick={() => operationList.redo()}/>
+        </div>
     </div>
 </main>
 {/if}
@@ -846,8 +854,75 @@ updateTip();
         }
     }
 
+    /* Loading screen */
+    .loading-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        gap: 1.5em;
+        color: #333;
+        font-size: 1.5rem;
+        background: #fafafa;
+    }
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #ccc;
+        border-top-color: #6df;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 
+    /* Error screen */
+    .error-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 2em;
+        font-size: 1.2rem;
+        color: #c00;
+        h2 { margin-bottom: 1em; }
+        pre {
+            white-space: pre-wrap;
+            max-width: 80%;
+            background: #f5f5f5;
+            padding: 1em;
+            border-radius: 4px;
+        }
+    }
+    .return-link {
+        margin-top: 1em;
+        color: #6df;
+    }
 
-
+    /* Footer actions (home + undo/redo) */
+    .footer-actions {
+        display: flex;
+        align-items: center;
+        gap: 1vh;
+        padding-right: 1vh;
+    }
+    .home-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: white;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        padding: 0.5vh;
+        &:hover {
+            opacity: 1;
+        }
+    }
 
 </style>
