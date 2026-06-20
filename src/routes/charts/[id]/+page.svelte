@@ -935,4 +935,38 @@ updateTip();
         }
     }
 
+    /* Responsive: small screens */
+    @media (max-width: 900px) {
+        :root {
+            --player-height: 70vh;
+            --bottom-bar-height: 14vh;
+            --bottom-tips-height: 5vh;
+        }
+        #sidebar {
+            width: 16vh;
+        }
+        #secondary-sidebar {
+            right: 16vh;
+            width: 24vh;
+        }
+    }
+    @media (max-width: 600px) {
+        :root {
+            --player-height: 60vh;
+            --bottom-bar-height: 18vh;
+            --bottom-tips-height: 6vh;
+        }
+        #sidebar {
+            width: 14vh;
+        }
+        #secondary-sidebar {
+            right: 14vh;
+            width: 20vh;
+        }
+        #footer {
+            flex-wrap: wrap;
+            gap: 0.5vh;
+        }
+    }
+
 </style>

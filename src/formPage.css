@@ -26,6 +26,7 @@ div[role="form"], li[role="form"] {
     box-shadow: 0.25em 0.25em 0.25em rgba(0, 0, 0, 0.25);
     border: 2px solid rgba(0, 0, 0, 0.25);
     overflow-y: auto;
+    max-width: 90vw;
 }
 
 
@@ -44,4 +45,35 @@ input[type="submit"] {
 
 div[role="form"] span.label {
     align-self: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    :root {
+        --size: 1em;
+    }
+    main {
+        padding-top: 4em;
+    }
+    div[role="form"], li[role="form"] {
+        padding: 0.75em;
+        max-width: 95vw;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --size: 0.85em;
+    }
+    main {
+        padding-top: 3.5em;
+    }
+    div[role="form"], li[role="form"] {
+        grid-template-columns: 1fr;
+        padding: 0.6em;
+    }
+    input[type="submit"],
+    input[type="button"] {
+        grid-column: 1 / 2;
+    }
 }

@@ -4,6 +4,7 @@
 @font-face {
     font-family: phigros;
     src: url("/cmdysj.ttf");
+    font-display: swap;
 }
 
 body,
@@ -13,15 +14,16 @@ html {
     height: 100%;
     background: #fafafa;
     width: 100%;
-    font-family: phigros;
-    overflow: hidden;
+    font-family: phigros, sans-serif;
+    overflow: auto;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
 }
 
 :root {
     --color-foreground: black;
 }
-
 
 a {
     text-decoration: none;
@@ -41,4 +43,29 @@ span[role="link"] {
 span[role="link"]:hover {
     text-decoration: underline;
     color: #6fd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    :root {
+        --font-size-medium: 2vh;
+        --font-size-small: 1.6vh;
+        --font-size-smaller: 1.2vh;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #8885;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #8888;
 }

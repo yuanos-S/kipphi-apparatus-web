@@ -339,9 +339,12 @@
                 <input
                     disabled={processing}
                     type="button"
-                    value={$_("create.create")}
+                    value={processing ? "Loading..." : $_("create.create")}
                     onclick={createWithRetail}
                 />
+                {#if processing}
+                    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+                {/if}
                 {#if success}
                     <p>{$_("create.success")}</p>
                 {/if}
@@ -351,11 +354,11 @@
                 <input
                     disabled={processing}
                     type="button"
-                    value={$_("create.create")}
+                    value={processing ? "Loading..." : $_("create.create")}
                     onclick={createWithArchive}
                 />
-                {#if success}
-                    <p>{$_("create.success")}</p>
+                {#if processing}
+                    <div class="loading-bar"><div class="loading-bar-fill"></div></div>
                 {/if}
             {/if}
         </div>
@@ -390,7 +393,26 @@
     }
     div[role="form"] {
         z-index: 0;
-        /* 使得z-index生效 */
         position: relative;
+    }
+    .loading-bar {
+        grid-column: 1 / span 2;
+        height: 4px;
+        background: #ddd;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .loading-bar-fill {
+        height: 100%;
+        background: #6df;
+        animation: loadingSlide 1.2s ease-in-out infinite;
+    }
+    @keyframes loadingSlide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    input[type="button"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 </style>

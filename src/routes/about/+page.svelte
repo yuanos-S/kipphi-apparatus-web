@@ -9,14 +9,22 @@
     <div class="content">
         <h1>{$_("about.title")}</h1>
         <p>{$_("about.desc")}</p>
-        <div class="table">
 
+        <div class="notice">
+            <p>This is a <strong>Web Edition</strong> based on the original
+            <a href="https://github.com/TeamZincs/kipphi-apparatus" target="_blank" rel="noopener">KipPhi Apparatus</a>
+            by Zes M Young / TeamZincs (MIT Licensed).</p>
+            <p>Converted from Tauri desktop app to pure browser web app.
+            All file operations use IndexedDB. Data stays in your browser.</p>
+        </div>
+
+        <div class="table">
             <span>{$_("about.apparatus")}</span><span>{__APP_VERSION}</span>
             <span>{$_("about.kipphi")}</span><span>{__KIPPHI_VERSION}</span>
             <span>{$_("about.player")}</span><span>{__PLAYER_VERSION}</span>
             <span>{$_("about.canvasEditor")}</span><span>{__CANVAS_EDITOR_VERSION}</span>
         </div>
-        
+
         <div class="table-3">
             {#each __DEPENDENCIES as dep}
                 <span>{dep.name}</span><span>{dep.version}</span><span>{dep.license}</span>
@@ -59,5 +67,14 @@
         border-radius: var(--border-radius);
         border: 1px solid var(--color-foreground);
         padding: 4px;
+    }
+    .notice {
+        background: #ffffff15;
+        border: 1px solid #ffffff30;
+        border-radius: var(--border-radius);
+        padding: 1em;
+        margin: 1em 0;
+        p { color: var(--color-foreground); font-size: var(--font-size-small); }
+        a { color: #6df; }
     }
 </style>

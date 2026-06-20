@@ -63,18 +63,23 @@
   }
 
   .nav-button {
-    background: #323334;
+    background: linear-gradient(135deg, #323334 0%, #2a2a2e 100%);
     color: white;
-    border-radius: 7px;
-    font-size: 150%;
-    padding: 0.1em 0.2em;
+    border-radius: 8px;
+    font-size: 140%;
+    padding: 0.2em 0.5em;
     text-decoration: none;
     align-content: center;
-    transition: box-shadow 0.3s ease-in;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255,255,255,0.1);
+    &:active {
+      transform: scale(0.96);
+    }
   }
 
   .nav-button:hover {
-    box-shadow: 1px 1px 4px #666768;
+    box-shadow: 0 2px 8px rgba(102, 221, 255, 0.3);
+    border-color: rgba(102, 221, 255, 0.3);
   }
 
   .container {
@@ -122,21 +127,22 @@
   }
 
   .chart {
-    /* 基本 */
     display: block;
-    border-radius: 7px;
+    border-radius: 10px;
     background-color: #f8f9fa44;
-    box-shadow: 1px 1px 4px #666768;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     clip-path: fill-box;
-    /* 使标题文字能依赖它定位 */
     position: relative;
-    /* 动画、选中状态的影子 */
-    transition: box-shadow 0.3s ease-in;
+    transition: all 0.25s ease;
     height: 40vh;
+    overflow: hidden;
+    &:active {
+      transform: scale(0.98);
+    }
   }
 
   .chart.selected {
-    box-shadow: 1px 1px 4px #666768;
+    box-shadow: 0 2px 12px rgba(102, 221, 255, 0.4);
   }
 
   .chart-title {
@@ -209,6 +215,37 @@
   .delete-link {
     color: red;
     transition-delay: 0.45s;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container {
+      padding: 1em;
+    }
+    .nav-button {
+      font-size: 100%;
+      padding: 0.2em 0.4em;
+    }
+    .chart {
+      height: 30vh;
+    }
+  }
+  @media (max-width: 480px) {
+    .container {
+      padding: 0.5em;
+    }
+    .nav-button {
+      font-size: 80%;
+    }
+    .chart {
+      height: 25vh;
+    }
+    .chart-title {
+      font-size: 100%;
+    }
+    footer {
+      font-size: 70%;
+    }
   }
 
 </style>

@@ -34,26 +34,31 @@
         color: black;
         font-size: 2.5vh;
         appearance: none;
-        // border: 1px solid grey;
         border: none;
         .wide-button;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        &:active {
+            transform: scale(0.97);
+        }
         &.progressive {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
             &:hover {
-                background-color: #0069d9;
+                box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
             }
         }
         &.destructive {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
             color: white;
             &:hover {
-                background-color: #c82333;
+                box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
             }
         }
         &.disabled {
             pointer-events: none;
             filter: grayscale(0.9);
+            opacity: 0.6;
         }
         &:hover {
             background-color: #eee;
