@@ -27,11 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Replace 'kipphi-apparatus-web' with your actual repo name
+      # Build with empty base path for custom domain support
+      # If using username.github.io/repo/ (no custom domain), set BASE_PATH to /repo-name
       - name: Build
         run: npm run build
         env:
-          BASE_PATH: /${{ github.event.repository.name }}
+          BASE_PATH: ""
 
       - name: Add 404.html for SPA routing
         run: cp build/index.html build/404.html

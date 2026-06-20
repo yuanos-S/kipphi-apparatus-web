@@ -1,6 +1,6 @@
 // Service Worker for KipPhi Apparatus Web
 // Strategy: cache-first for static assets, never block navigation
-const CACHE_VERSION = "kpa-web-v2";
+const CACHE_VERSION = "kpa-web-v3";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -25,13 +25,11 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  // Only handle same-origin GET requests
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
-
-  // Never intercept navigation requests — let the browser handle them
+  // Never intercept navigation requests
   if (event.request.mode === "navigate") return;
 
-  // Cache-first for static assets (JS, CSS, images, fonts, audio)
+  // Cache-first for static assets
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
