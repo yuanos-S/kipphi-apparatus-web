@@ -3,7 +3,7 @@ import { Player, AudioProcessor, Images } from "kipphi-player";
 import { EventSequenceEditors, NotesEditor, NotesEditorState } from "kipphi-canvas-editor";
 import type { PageData } from "./$types";
 import { onMount, tick, onDestroy } from "svelte";
-import { Chart, EventEndNode, EventStartNode, EventType, KPAError, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
+import { Chart, EventEndNode, EventStartNode, EventType, KPAError, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
 
 import { _ } from "#/i18n";
 
@@ -25,7 +25,9 @@ import { Sidebar, init as EditorGlobalInit, SecondarySidebar, restoreStates,
     eventsType, eventsLayer,
     playerShowsUI, playerShowsLineID, playerHitEffectNoFollows, playerShowsCurve, playerCameraZoom,
     selectedLineNumber, activeSidebar, activeSecondarySidebar, previousActiveSecondarySidebar, selectedNote, selectedNotes, selectedNode, selectedNodes,
-    timeDivisor, chartId, } from "./store.svelte";
+    timeDivisor, chartId,
+    notesNoteType, notesEditChecked,
+    } from "./store.svelte";
     import NoteEditor from "./NoteEditor.svelte";
     import Constants from "./constants";
     import NotesSidebar from "./NotesSidebar.svelte";
@@ -734,6 +736,24 @@ updateTip();
         ]} bind:currentOption={speed} />
         <TextSwitchButton onText="Y" offText="N" bgText={$_("general.preservesPitch")} bind:checked={preservesPitch} />
     </div>
+    <div id="touch-toolbar">
+        <button class="touch-btn" class:active={$notesEditChecked}
+            onclick={() => notesEditChecked.update(v => !v)}
+            title={$_("main.notes.addNote") ?? "Add Note"}>
+            {$_("main.notes.addNote") ?? "Edit"}
+        </button>
+        <div class="touch-divider"></div>
+        {#each [{type: NoteType.tap, label: "Tap"}, {type: NoteType.drag, label: "Drag"}, {type: NoteType.flick, label: "Flick"}, {type: NoteType.hold, label: "Hold"}] as btn}
+            <button class="touch-btn" class:active={$notesNoteType === btn.type}
+                onclick={() => notesNoteType.set(btn.type)}>
+                {btn.label}
+            </button>
+        {/each}
+        <div class="touch-divider"></div>
+        <button class="touch-btn del" onclick={handleDelete} title="Delete">
+            Del
+        </button>
+    </div>
     <div id="secondary-footer">
         <span id="tips" onclick={() => {clearTimeout(timeout);updateTip()}}>Tips: {Constants.tips[tipIndex]}</span>
         <div class="footer-actions">
@@ -966,6 +986,81 @@ updateTip();
         #footer {
             flex-wrap: wrap;
             gap: 0.5vh;
+        }
+    }
+
+    /* Touch toolbar for mobile/touch devices */
+    #touch-toolbar {
+        display: none;
+        grid-row: 3 / 4;
+        grid-column: 1 / 4;
+        background: #2a2a2e;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5vh;
+        padding: 0 1vh;
+        flex-wrap: wrap;
+    }
+    .touch-btn {
+        min-width: 44px;
+        min-height: 36px;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 8px;
+        background: #3a3a3e;
+        color: #ddd;
+        font-size: 1.4vh;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s;
+        padding: 0.5vh 1vh;
+        &:active {
+            transform: scale(0.94);
+            background: #4a4a4e;
+        }
+        &.active {
+            background: #6df;
+            color: #111;
+            border-color: #6df;
+            box-shadow: 0 0 8px rgba(102,221,255,0.4);
+        }
+        &.del {
+            background: #442020;
+            border-color: #633;
+            &:active {
+                background: #553030;
+            }
+        }
+    }
+    .touch-divider {
+        width: 1px;
+        height: 24px;
+        background: rgba(255,255,255,0.15);
+        margin: 0 0.3vh;
+    }
+
+    /* Show touch toolbar on small screens */
+    @media (max-width: 900px) {
+        :root {
+            --player-height: 65vh;
+            --bottom-bar-height: 10vh;
+            --bottom-tips-height: 4vh;
+        }
+        #touch-toolbar {
+            display: flex;
+        }
+        /* Adjust grid for extra row */
+        .container {
+            grid-template-rows: var(--player-height) var(--bottom-bar-height) auto var(--bottom-tips-height);
+        }
+        #secondary-footer {
+            grid-row: 4 / 5;
+        }
+    }
+    @media (max-width: 600px) {
+        .touch-btn {
+            font-size: 1.2vh;
+            min-width: 38px;
+            padding: 0.4vh 0.6vh;
         }
     }
 

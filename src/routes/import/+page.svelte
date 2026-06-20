@@ -38,15 +38,30 @@
     function getDuration(blob: Blob): Promise<number> {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                URL.revokeObjectURL(url);
+                reject(new Error("Audio format not supported or file is corrupted"));
+            }, 5000);
             audio.addEventListener(
                 "loadedmetadata",
                 () => {
-                    resolve(audio.duration);
+                    clearTimeout(timeout);
+                    const dur = audio.duration;
                     URL.revokeObjectURL(url);
+                    if (isNaN(dur) || dur === 0) {
+                        reject(new Error("Audio duration is invalid"));
+                    } else {
+                        resolve(dur);
+                    }
                 },
                 { once: true },
             );
+            audio.addEventListener("error", () => {
+                clearTimeout(timeout);
+                URL.revokeObjectURL(url);
+                reject(new Error("Cannot decode this audio format"));
+            }, { once: true });
         });
     }
 
@@ -335,7 +350,7 @@
                 <span class="label">{$_("form.illustration")}</span>
                 <input type="file" bind:this={illustrationFileInput} accept="image/*"/>
                 <span class="label">{$_("form.music")}</span>
-                <input type="file" bind:this={musicFileInput} accept="audio/*"/>
+                <input type="file" bind:this={musicFileInput} accept="audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac,.opus,.webm,.wma"/>
                 <input
                     disabled={processing}
                     type="button"

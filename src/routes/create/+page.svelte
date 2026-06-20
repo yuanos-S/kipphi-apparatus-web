@@ -22,10 +22,25 @@
   function getDuration(blob: Blob): Promise<number> {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    return new Promise((resolve) => {
-      audio.addEventListener("loadedmetadata", () => {
-        resolve(audio.duration);
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
         URL.revokeObjectURL(url);
+        reject(new Error("Audio format not supported or file is corrupted"));
+      }, 5000);
+      audio.addEventListener("loadedmetadata", () => {
+        clearTimeout(timeout);
+        const dur = audio.duration;
+        URL.revokeObjectURL(url);
+        if (isNaN(dur) || dur === 0) {
+          reject(new Error("Audio duration is invalid"));
+        } else {
+          resolve(dur);
+        }
+      }, {once: true});
+      audio.addEventListener("error", () => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(url);
+        reject(new Error("Cannot decode this audio format"));
       }, {once: true});
     });
   }
@@ -304,7 +319,7 @@
     <label for="illustration">{$_("form.illustration")}</label>
     <input type="file" bind:this={illustrationFileInput} accept="image/*" />
     <label for="music">{$_("form.music")}</label>
-    <input type="file" bind:this={musicFileInput} accept="audio/*"/>
+    <input type="file" bind:this={musicFileInput} accept="audio/*,.mp3,.wav,.ogg,.flac,.m4a,.aac,.opus,.webm,.wma"/>
     <input type="button" value={creating ? "Loading..." : $_("create.create")} onclick={create} disabled={creating} />
     {#if creating}
       <div class="loading-bar"><div class="loading-bar-fill"></div></div>
