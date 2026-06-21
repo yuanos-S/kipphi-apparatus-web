@@ -222,9 +222,14 @@
       ]);
 
       success = true;
-      setTimeout(() => {
-        goto(`${base}/charts/${id}`);
-      }, 800);
+      countdown = 3;
+      const cdInterval = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+          clearInterval(cdInterval);
+          goto(`${base}/charts/${id}`);
+        }
+      }, 1000);
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e));
     } finally {
@@ -285,6 +290,7 @@
 
   let success: boolean = $state(false);
   let creating: boolean = $state(false);
+  let countdown: number = $state(0);
   let idState: State = $state(INITIAL);
 </script>
 
@@ -325,7 +331,12 @@
       <div class="loading-bar"><div class="loading-bar-fill"></div></div>
     {/if}
     {#if success}
-      <p>{$_("create.success")}</p>
+      <div class="countdown-wrap">
+        <div class="countdown-ring" style="--progress: {countdown / 3}">
+          <span class="countdown-num">{countdown > 0 ? countdown : 'Go'}</span>
+        </div>
+        <p>{$_("create.success")}</p>
+      </div>
     {/if}
   </div>
 </main>
@@ -351,5 +362,37 @@
   input[type="button"]:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+  .countdown-wrap {
+    grid-column: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5em;
+  }
+  .countdown-ring {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: conic-gradient(#6df calc(var(--progress) * 360deg), #ddd 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+    &::before {
+      content: '';
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: azure;
+    }
+  }
+  .countdown-num {
+    position: relative;
+    z-index: 1;
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
   }
 </style>

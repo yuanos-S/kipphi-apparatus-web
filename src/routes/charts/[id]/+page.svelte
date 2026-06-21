@@ -26,7 +26,7 @@ import { Sidebar, init as EditorGlobalInit, SecondarySidebar, restoreStates,
     playerShowsUI, playerShowsLineID, playerHitEffectNoFollows, playerShowsCurve, playerCameraZoom,
     selectedLineNumber, activeSidebar, activeSecondarySidebar, previousActiveSecondarySidebar, selectedNote, selectedNotes, selectedNode, selectedNodes,
     timeDivisor, chartId,
-    notesNoteType, notesEditChecked,
+    notesNoteType, notesEditChecked, notesAbove,
     } from "./store.svelte";
     import NoteEditor from "./NoteEditor.svelte";
     import Constants from "./constants";
@@ -106,6 +106,29 @@ try {
     console.error("Editor init failed:", e);
 }
 loading = false;
+
+// 操作光标状态
+let cursorX: number = $state(0);
+let cursorY: number = $state(0);
+let cursorVisible: boolean = $state(false);
+
+function handleInnerMove(e: MouseEvent) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    cursorX = e.clientX - rect.left;
+    cursorY = e.clientY - rect.top;
+    cursorVisible = true;
+}
+function handleInnerTouch(e: TouchEvent) {
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    cursorX = touch.clientX - rect.left;
+    cursorY = touch.clientY - rect.top;
+    cursorVisible = true;
+}
+function handleInnerLeave() {
+    cursorVisible = false;
+}
 
 
 // @ts-expect-error 仅供调试
@@ -537,6 +560,13 @@ updateTip();
 
 </script>
 
+<!-- 竖屏旋转提示（仅手机竖屏时显示） -->
+<div id="rotate-hint">
+    <div class="rotate-icon">📱</div>
+    <p>请旋转设备到横屏使用</p>
+    <p class="small">Landscape mode recommended</p>
+</div>
+
 {#if loading}
 <div class="loading-screen">
     <div class="loading-spinner"></div>
@@ -550,10 +580,18 @@ updateTip();
 </div>
 {:else}
 <main class="container">
-    <div id="inner" onwheel={handleWheel} style:--aspect-ratio={aspect}>
+    <div id="inner" onwheel={handleWheel} style:--aspect-ratio={aspect}
+        onmousemove={handleInnerMove} onmouseleave={handleInnerLeave}
+        ontouchmove={handleInnerTouch} ontouchend={handleInnerLeave}>
         <canvas bind:this={playerCanvas} id="player" width={playerWidth} height={KPASettings.playerHeight}>Your device does not support the HTML5 canvas element.</canvas>
         <canvas bind:this={notesEditorCanvas} id="ne" width={600} height={900}>Your device does not support the HTML5 canvas element.</canvas>
         <canvas bind:this={eventSequenceEditorCanvas} id="ece" width={600} height={900}>Your device does not support the HTML5 canvas element.</canvas>
+        {#if cursorVisible}
+        <div class="edit-cursor" style="left: {cursorX}px; top: {cursorY}px;">
+            <div class="cursor-h-line"></div>
+            <div class="cursor-v-line"></div>
+        </div>
+        {/if}
     </div>
     <div id="secondary-sidebar">
         <div class="sidebar-shadow"></div>
@@ -737,12 +775,43 @@ updateTip();
         <TextSwitchButton onText="Y" offText="N" bgText={$_("general.preservesPitch")} bind:checked={preservesPitch} />
     </div>
     <div id="touch-toolbar">
-        <button class="touch-btn" class:active={$notesEditChecked}
-            onclick={() => notesEditChecked.update(v => !v)}
-            title={$_("main.notes.addNote") ?? "Add Note"}>
-            {$_("main.notes.addNote") ?? "Edit"}
+        <!-- 播放/暂停 -->
+        <button class="touch-btn" onclick={() => isPlaying ? player.pause() : play()}>
+            {isPlaying ? "⏸" : "▶"}
+        </button>
+        <!-- 网格开关 -->
+        <button class="touch-btn" class:active={showingGrid}
+            onclick={() => {
+                showingGrid = !showingGrid;
+                if (showingGrid) {
+                    notesEditorCanvas.style.display = "";
+                    eventSequenceEditorCanvas.style.display = "";
+                    if (!player.playing) {
+                        notesEditor.draw(player.renderingBeats);
+                        eventSequenceEditors.draw(player.renderingBeats);
+                    }
+                } else {
+                    notesEditorCanvas.style.display = "none";
+                    eventSequenceEditorCanvas.style.display = "none";
+                }
+            }}>
+            ⊞
         </button>
         <div class="touch-divider"></div>
+        <!-- 撤销/重做 -->
+        <button class="touch-btn" onclick={() => operationList.undo()} style:opacity={undoAvailable ? 1 : 0.3}>
+            ↶
+        </button>
+        <button class="touch-btn" onclick={() => operationList.redo()} style:opacity={redoAvailable ? 1 : 0.3}>
+            ↷
+        </button>
+        <div class="touch-divider"></div>
+        <!-- 编辑模式 -->
+        <button class="touch-btn" class:active={$notesEditChecked}
+            onclick={() => notesEditChecked.update(v => !v)}>
+            {$_("main.notes.addNote") ?? "Edit"}
+        </button>
+        <!-- 音符类型 -->
         {#each [{type: NoteType.tap, label: "Tap"}, {type: NoteType.drag, label: "Drag"}, {type: NoteType.flick, label: "Flick"}, {type: NoteType.hold, label: "Hold"}] as btn}
             <button class="touch-btn" class:active={$notesNoteType === btn.type}
                 onclick={() => notesNoteType.set(btn.type)}>
@@ -750,7 +819,21 @@ updateTip();
             </button>
         {/each}
         <div class="touch-divider"></div>
-        <button class="touch-btn del" onclick={handleDelete} title="Delete">
+        <!-- 音符方向 -->
+        <button class="touch-btn" class:active={$notesAbove}
+            onclick={() => notesAbove.update(v => !v)}>
+            {$notesAbove ? "↑" : "↓"}
+        </button>
+        <!-- 切换判定线 -->
+        <button class="touch-btn" onclick={() => selectedLineNumber.update(v => Math.max(0, v - 1))}>
+            ◀
+        </button>
+        <button class="touch-btn" onclick={() => selectedLineNumber.update(v => Math.min((data.chart.judgeLines.length ?? 1) - 1, v + 1))}>
+            ▶
+        </button>
+        <div class="touch-divider"></div>
+        <!-- 删除 -->
+        <button class="touch-btn del" onclick={handleDelete}>
             Del
         </button>
     </div>
@@ -955,38 +1038,29 @@ updateTip();
         }
     }
 
-    /* Responsive: small screens */
-    @media (max-width: 900px) {
-        :root {
-            --player-height: 70vh;
-            --bottom-bar-height: 14vh;
-            --bottom-tips-height: 5vh;
-        }
-        #sidebar {
-            width: 16vh;
-        }
-        #secondary-sidebar {
-            right: 16vh;
-            width: 24vh;
+    /* Rotate hint for portrait mode on mobile */
+    #rotate-hint {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #1a1a2e;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
+        gap: 1em;
+        p { font-size: 1.2em; margin: 0; }
+        .small { font-size: 0.8em; opacity: 0.6; }
+        .rotate-icon {
+            font-size: 4em;
+            animation: rotateHint 2s ease-in-out infinite;
         }
     }
-    @media (max-width: 600px) {
-        :root {
-            --player-height: 60vh;
-            --bottom-bar-height: 18vh;
-            --bottom-tips-height: 6vh;
-        }
-        #sidebar {
-            width: 14vh;
-        }
-        #secondary-sidebar {
-            right: 14vh;
-            width: 20vh;
-        }
-        #footer {
-            flex-wrap: wrap;
-            gap: 0.5vh;
-        }
+    @keyframes rotateHint {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(-90deg); }
     }
 
     /* Touch toolbar for mobile/touch devices */
@@ -1002,8 +1076,8 @@ updateTip();
         flex-wrap: wrap;
     }
     .touch-btn {
-        min-width: 44px;
-        min-height: 36px;
+        min-width: 40px;
+        min-height: 34px;
         border: 1px solid rgba(255,255,255,0.15);
         border-radius: 8px;
         background: #3a3a3e;
@@ -1012,7 +1086,10 @@ updateTip();
         font-family: inherit;
         cursor: pointer;
         transition: all 0.15s;
-        padding: 0.5vh 1vh;
+        padding: 0.5vh 0.8vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         &:active {
             transform: scale(0.94);
             background: #4a4a4e;
@@ -1026,9 +1103,7 @@ updateTip();
         &.del {
             background: #442020;
             border-color: #633;
-            &:active {
-                background: #553030;
-            }
+            &:active { background: #553030; }
         }
     }
     .touch-divider {
@@ -1038,30 +1113,92 @@ updateTip();
         margin: 0 0.3vh;
     }
 
-    /* Show touch toolbar on small screens */
-    @media (max-width: 900px) {
+    /* === Responsive: merge all mobile rules === */
+
+    /* Phone landscape (max-width: 900px, landscape) */
+    @media (max-width: 900px) and (orientation: landscape) {
         :root {
-            --player-height: 65vh;
-            --bottom-bar-height: 10vh;
+            --player-height: 72vh;
+            --bottom-bar-height: 12vh;
             --bottom-tips-height: 4vh;
+            --player-width: calc(100vw - 32vh);
+        }
+        #sidebar {
+            width: 12vh;
+        }
+        #secondary-sidebar {
+            right: 12vh;
+            width: 20vh;
         }
         #touch-toolbar {
             display: flex;
         }
-        /* Adjust grid for extra row */
         .container {
             grid-template-rows: var(--player-height) var(--bottom-bar-height) auto var(--bottom-tips-height);
         }
         #secondary-footer {
             grid-row: 4 / 5;
         }
+        #footer {
+            flex-wrap: wrap;
+            gap: 0.5vh;
+        }
     }
-    @media (max-width: 600px) {
+
+    /* Phone landscape small (max-width: 600px, landscape) */
+    @media (max-width: 600px) and (orientation: landscape) {
+        :root {
+            --player-height: 68vh;
+            --bottom-bar-height: 14vh;
+            --bottom-tips-height: 4vh;
+            --player-width: calc(100vw - 26vh);
+        }
+        #sidebar {
+            width: 10vh;
+        }
+        #secondary-sidebar {
+            right: 10vh;
+            width: 16vh;
+        }
         .touch-btn {
             font-size: 1.2vh;
-            min-width: 38px;
-            padding: 0.4vh 0.6vh;
+            min-width: 34px;
+            padding: 0.3vh 0.5vh;
         }
+    }
+
+    /* Portrait phone: show rotate hint, hide editor */
+    @media (max-width: 768px) and (orientation: portrait) {
+        #rotate-hint {
+            display: flex !important;
+        }
+        .container {
+            display: none;
+        }
+    }
+
+    /* 操作光标 */
+    .edit-cursor {
+        position: absolute;
+        pointer-events: none;
+        z-index: 10;
+        transform: translate(-50%, -50%);
+    }
+    .cursor-h-line {
+        position: absolute;
+        left: -100vw;
+        top: 0;
+        width: 200vw;
+        height: 1px;
+        background: rgba(102, 221, 255, 0.4);
+    }
+    .cursor-v-line {
+        position: absolute;
+        left: 0;
+        top: -100vh;
+        width: 1px;
+        height: 200vh;
+        background: rgba(102, 221, 255, 0.4);
     }
 
 </style>
