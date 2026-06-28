@@ -1,4 +1,8 @@
+[![MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/TeamZincs/kipphi-apparatus)
+
 # KipPhi Apparatus - Web Edition
+
+> Based on TeamZincs/kipphi-apparatus, licensed under MIT License.
 
 > 基于 [KipPhi Apparatus](https://github.com/TeamZincs/kipphi-apparatus) 改造的纯网页版 Phigros 谱面编辑器。
 
@@ -34,3 +38,12 @@
 ## 许可证
 
 MIT License — 继承自原项目
+
+## 版权声明
+
+```
+This project is based on kipphi-apparatus
+Copyright (c) 2026 TeamZincs
+
+Licensed under the MIT License.
+```
