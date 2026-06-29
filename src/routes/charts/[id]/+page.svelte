@@ -13,7 +13,7 @@ import { Player, AudioProcessor, Images } from "kipphi-player";
 import { EventSequenceEditors, NotesEditor, NotesEditorState } from "kipphi-canvas-editor";
 import type { PageData } from "./$types";
 import { onMount, tick, onDestroy } from "svelte";
-import { Chart, EventEndNode, EventStartNode, EventType, KPAError, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
+import { Chart, EventEndNode, EventStartNode, EventType, KPAError, Note, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
 
 import { _ } from "#/i18n";
 
@@ -160,6 +160,8 @@ let showingGrid = $state(true);
 let speed = $state("1.0x");
 let preservesPitch = $state(true);
 let sidebarCollapsed = $state(false);
+/** 移动端放置模式 */
+let placementActive = $state(false);
 
 let undoAvailable = $state(false);
 let redoAvailable = $state(false);
@@ -817,8 +819,32 @@ updateTip();
         notify("保存成功", "info");
     }}
     onHome={() => goto(`${base}/`)}
-    onNoteType={(type) => { notesNoteType.set(type); }}
+    onNoteTypeSelect={(type) => {
+        notesNoteType.set(type);
+        notesEditChecked.set(true);
+        placementActive = true;
+    }}
+    onPlace={() => {
+        if (!notesEditor) return;
+        const t = notesEditor.pointedTime;
+        const x = notesEditor.pointedPositionX;
+        const target = notesEditor.target;
+        if (!target) return;
+        const nt = Note.fromKPAJSON({
+            type: $notesNoteType,
+            startTime: t,
+            endTime: t,
+            positionX: x,
+            above: $notesAbove ? 1 : 0,
+        }, null);
+        operationList.tryDo(() => new O.NoteAddOperation(nt, target.getNode(nt, true)));
+    }}
+    onCancelPlace={() => {
+        notesEditChecked.set(false);
+        placementActive = false;
+    }}
     currentNoteType={$notesNoteType}
+    placementActive={placementActive}
 />
 {/if}
 
@@ -833,6 +859,29 @@ updateTip();
         --bottom-bar-height: calc(0.11 * var(--dvh));
         --bottom-tips-height: calc(0.04 * var(--dvh));
         --player-width: calc(100vw - 50 * var(--dvh) / 100);
+    }
+
+    /* 编辑器全局：禁用文本选中、防止页面乱动 */
+    .container {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        overscroll-behavior: none;
+        overflow: hidden;
+
+        /* 禁止所有文本选中 */
+        *, *::before, *::after {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 输入框允许选中 */
+        input, textarea, [contenteditable] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
     }
     .container {
         display: grid;

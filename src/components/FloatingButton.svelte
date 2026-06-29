@@ -2,14 +2,14 @@
     /**
      * 移动端悬浮快捷键按钮
      * - 支持拖拽移动（pointer events，兼容 Safari）
-     * - 点击展开快捷操作面板
-     * - 包含音符类型切换按钮（tap/drag/flick/hold）
-     * - 可切换查看快捷键列表
+     * - 音符类型选择进入预放置模式
+     * - 预放置模式：显示放置/取消，用户拖动定位后点击放置
+     * - Hold 两步放置：起点 → 终点
+     * - 面板可关闭/最小化
      * - PC端自动隐藏
-     * - 自动避开安全区域（刘海屏等）
      */
     import { onMount, onDestroy } from "svelte";
-    import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info, Music } from "@lucide/svelte";
+    import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info, Music, Check, Ban } from "@lucide/svelte";
     import { toggleFullscreen, isFullscreen, isMobileDevice } from "#/userData";
 
     let isDragging = $state(false);
@@ -28,10 +28,11 @@
     let dragThreshold = 5;
     let hasMoved = false;
 
-    /**
-     * 音符类型定义
-     * 与 kipphi NoteType 枚举对应
-     */
+    /** 放置模式状态 */
+    type PlaceState = "normal" | "placing" | "holdStart" | "holdEnd";
+    let placeState: PlaceState = $state("normal");
+    let placingNoteType = $state(1);
+
     interface NoteTypeOption {
         type: number;
         label: string;
@@ -45,9 +46,10 @@
         { type: 2, label: "Hold", icon: "■" },
     ];
 
-    /**
-     * 快捷键列表
-     */
+    function getNoteLabel(type: number) {
+        return noteTypes.find(n => n.type === type)?.label ?? "Tap";
+    }
+
     const shortcuts = [
         { key: "Space", desc: "播放/暂停" },
         { key: "Ctrl+Z", desc: "撤销" },
@@ -67,26 +69,38 @@
         onRedo,
         onSave,
         onHome,
-        onNoteType,
+        onNoteTypeSelect,
+        onPlace,
+        onCancelPlace,
         currentNoteType = 1,
+        placementActive = false,
     }: {
         onPlayPause?: () => void;
         onUndo?: () => void;
         onRedo?: () => void;
         onSave?: () => void;
         onHome?: () => void;
-        onNoteType?: (type: number) => void;
+        /** 用户选择了音符类型，进入预放置模式 */
+        onNoteTypeSelect?: (type: number) => void;
+        /** 用户点击放置 */
+        onPlace?: () => void;
+        /** 用户点击取消放置 */
+        onCancelPlace?: () => void;
         currentNoteType?: number;
+        /** 外部控制：是否处于放置模式 */
+        placementActive?: boolean;
     } = $props();
 
     onMount(() => {
         isMobile = isMobileDevice();
-
+        // 检查悬浮窗是否被用户在设置中关闭
+        if (localStorage.getItem("floatingEnabled") === "0") {
+            isMobile = false;
+        }
         const savedX = localStorage.getItem("floatingBtnX");
         const savedY = localStorage.getItem("floatingBtnY");
         if (savedX) posX = parseInt(savedX);
         if (savedY) posY = parseInt(savedY);
-
         window.addEventListener("resize", handleResize);
         document.addEventListener("fullscreenchange", handleFullscreenChange);
         document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
@@ -169,70 +183,136 @@
         }
     }
 
+    /** 选择音符类型，进入预放置模式 */
     function selectNoteType(nt: NoteTypeOption) {
-        onNoteType?.(nt.type);
+        placingNoteType = nt.type;
+        if (nt.type === 2) {
+            placeState = "holdStart";
+        } else {
+            placeState = "placing";
+        }
+        onNoteTypeSelect?.(nt.type);
     }
+
+    /** 点击放置 */
+    function doPlace() {
+        onPlace?.();
+        // Hold: 第一次点击后进入终点设置阶段
+        if (placeState === "holdStart") {
+            placeState = "holdEnd";
+        }
+        // tap/drag/flick: 保持放置模式方便连续放置
+    }
+
+    /** 点击取消放置 */
+    function doCancelPlace() {
+        placeState = "normal";
+        onCancelPlace?.();
+    }
+
+    /** 关闭面板 */
+    function closePanel() {
+        showPanel = false;
+        showShortcuts = false;
+    }
+
+    /** 同步外部放置状态 */
+    $effect(() => {
+        if (!placementActive && placeState !== "normal") {
+            placeState = "normal";
+        }
+    });
 </script>
 
 {#if isMobile}
     <div class="floating-container" style="left: {posX}px; top: {posY}px;">
         {#if showPanel && !showShortcuts}
             <div class="floating-panel">
-                <!-- 面板标题 -->
-                <div class="panel-header">
-                    <span class="panel-title">快捷操作</span>
-                    <button class="icon-btn" onclick={() => { showShortcuts = true; }} title="快捷键">
-                        <Info size={14} />
-                    </button>
-                </div>
-
-                <!-- 操作按钮区 -->
-                <div class="panel-actions">
-                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("playPause")}>
-                        <Play size={18} />
-                    </button>
-                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("undo")}>
-                        <Undo2 size={18} />
-                    </button>
-                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("redo")}>
-                        <Redo2 size={18} />
-                    </button>
-                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("save")}>
-                        <Save size={18} />
-                    </button>
-                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("fullscreen")}>
-                        {#if fullscreen}
-                            <Minimize size={18} />
-                        {:else}
-                            <Maximize size={18} />
-                        {/if}
-                    </button>
-                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("home")}>
-                        <Home size={18} />
-                    </button>
-                </div>
-
-                <!-- 分隔线 -->
-                <div class="divider"></div>
-
-                <!-- 音符类型按钮区 -->
-                <div class="panel-header">
-                    <span class="panel-title"><Music size={12} /> 音符类型</span>
-                </div>
-                <div class="note-type-row">
-                    {#each noteTypes as nt}
-                        <button
-                            class="note-type-btn"
-                            class:active={currentNoteType === nt.type}
-                            onpointerdown={(e) => e.stopPropagation()}
-                            onclick={() => selectNoteType(nt)}
-                            title={nt.label}
-                        >
-                            <span class="nt-icon">{nt.icon}</span>
-                            <span class="nt-label">{nt.label}</span>
+                <!-- 预放置模式 -->
+                {#if placeState !== "normal"}
+                    <div class="placement-header">
+                        <span class="pl-title">
+                            {#if placeState === "holdStart"}
+                                Hold: 设置起点
+                            {:else if placeState === "holdEnd"}
+                                Hold: 设置终点
+                            {:else}
+                                {getNoteLabel(placingNoteType)}
+                            {/if}
+                        </span>
+                    </div>
+                    <div class="placement-actions">
+                        <button class="place-btn confirm" onpointerdown={(e) => e.stopPropagation()} onclick={doPlace}>
+                            <Check size={18} />
+                            {placeState === "holdStart" ? "设置起点" : "放置"}
                         </button>
-                    {/each}
-                </div>
+                        <button class="place-btn cancel" onpointerdown={(e) => e.stopPropagation()} onclick={doCancelPlace}>
+                            <Ban size={18} />
+                            取消
+                        </button>
+                    </div>
+                {:else}
+                    <!-- 面板标题 -->
+                    <div class="panel-header">
+                        <span class="panel-title">快捷操作</span>
+                        <div class="header-actions">
+                            <button class="icon-btn" onclick={() => { showShortcuts = true; }} title="快捷键">
+                                <Info size={14} />
+                            </button>
+                            <button class="icon-btn" onclick={closePanel} title="关闭">
+                                <X size={14} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮区 -->
+                    <div class="panel-actions">
+                        <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("playPause")}>
+                            <Play size={18} />
+                        </button>
+                        <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("undo")}>
+                            <Undo2 size={18} />
+                        </button>
+                        <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("redo")}>
+                            <Redo2 size={18} />
+                        </button>
+                        <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("save")}>
+                            <Save size={18} />
+                        </button>
+                        <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("fullscreen")}>
+                            {#if fullscreen}
+                                <Minimize size={18} />
+                            {:else}
+                                <Maximize size={18} />
+                            {/if}
+                        </button>
+                        <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("home")}>
+                            <Home size={18} />
+                        </button>
+                    </div>
+
+                    <!-- 分隔线 -->
+                    <div class="divider"></div>
+
+                    <!-- 音符类型按钮区 -->
+                    <div class="panel-header">
+                        <span class="panel-title"><Music size={12} /> 音符类型</span>
+                    </div>
+                    <div class="note-type-row">
+                        {#each noteTypes as nt}
+                            <button
+                                class="note-type-btn"
+                                class:active={currentNoteType === nt.type && placeState === "normal"}
+                                onpointerdown={(e) => e.stopPropagation()}
+                                onclick={() => selectNoteType(nt)}
+                                title={nt.label}
+                            >
+                                <span class="nt-icon">{nt.icon}</span>
+                                <span class="nt-label">{nt.label}</span>
+                            </button>
+                        {/each}
+                    </div>
+                {/if}
             </div>
         {/if}
 
@@ -255,17 +335,21 @@
             </div>
         {/if}
 
-        <!-- 主浮动按钮 -->
         <button
             class="floating-btn"
             class:dragging={isDragging}
+            class:placing={placeState !== "normal"}
             onpointerdown={handlePointerDown}
             onpointermove={handlePointerMove}
             onpointerup={handlePointerUp}
             onpointercancel={handlePointerUp}
             onclick={handleClick}
         >
-            <Keyboard size={22} />
+            {#if placeState !== "normal"}
+                <Music size={22} />
+            {:else}
+                <Keyboard size={22} />
+            {/if}
         </button>
     </div>
 {/if}
@@ -282,7 +366,6 @@
         -webkit-transform: translateZ(0);
     }
 
-    /* 主浮动按钮 */
     .floating-btn {
         width: 48px;
         height: 48px;
@@ -295,7 +378,7 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 16px rgba(102, 221, 255, 0.4);
-        transition: transform 0.15s, box-shadow 0.15s;
+        transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
@@ -306,9 +389,13 @@
             transform: scale(1.15);
             box-shadow: 0 6px 24px rgba(102, 221, 255, 0.6);
         }
+
+        &.placing {
+            background: linear-gradient(135deg, #ff9966 0%, #ff7744 100%);
+            box-shadow: 0 4px 16px rgba(255, 153, 102, 0.4);
+        }
     }
 
-    /* 面板 */
     .floating-panel {
         display: flex;
         flex-direction: column;
@@ -335,6 +422,11 @@
         padding: 0 2px;
     }
 
+    .header-actions {
+        display: flex;
+        gap: 4px;
+    }
+
     .panel-title {
         color: rgba(255, 255, 255, 0.65);
         font-size: 11px;
@@ -359,11 +451,9 @@
         -webkit-tap-highlight-color: transparent;
         outline: none;
         padding: 0;
-
         &:active { background: rgba(255, 255, 255, 0.2); }
     }
 
-    /* 操作按钮区 - 水平排列 3x2 网格 */
     .panel-actions {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -385,18 +475,15 @@
         -webkit-tap-highlight-color: transparent;
         outline: none;
         transition: background 0.15s;
-
         &:active { background: rgba(102, 221, 255, 0.3); }
     }
 
-    /* 分隔线 */
     .divider {
         height: 1px;
         background: rgba(255, 255, 255, 0.1);
         margin: 2px 0;
     }
 
-    /* 音符类型按钮 */
     .note-type-row {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -417,29 +504,65 @@
         -webkit-tap-highlight-color: transparent;
         outline: none;
         transition: all 0.15s;
-
-        .nt-icon {
-            font-size: 14px;
-            line-height: 1;
-        }
-
-        .nt-label {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
+        .nt-icon { font-size: 14px; line-height: 1; }
+        .nt-label { font-size: 11px; font-weight: 500; }
         &.active {
             background: rgba(102, 221, 255, 0.15);
             border-color: rgba(102, 221, 255, 0.5);
             color: #6df;
         }
+        &:active { background: rgba(102, 221, 255, 0.25); }
+    }
 
-        &:active {
-            background: rgba(102, 221, 255, 0.25);
+    /* 放置模式 */
+    .placement-header {
+        text-align: center;
+        padding: 4px 0;
+    }
+
+    .pl-title {
+        color: #ff9966;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .placement-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .place-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+        transition: all 0.15s;
+
+        &.confirm {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1.5px solid rgba(46, 204, 113, 0.4);
+            &:active { background: rgba(46, 204, 113, 0.35); }
+        }
+
+        &.cancel {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1.5px solid rgba(231, 76, 60, 0.4);
+            &:active { background: rgba(231, 76, 60, 0.35); }
         }
     }
 
-    /* 快捷键面板 */
     .shortcuts-panel {
         width: 200px;
         max-height: 55vh;

@@ -27,6 +27,14 @@
     import { exportAllUserData, importUserData, isMobileDevice, toggleFullscreen, isFullscreen } from "#/userData";
     import Respack from "./Respack.svelte";
 
+    // 悬浮窗开关
+    let floatingEnabled = $state(localStorage.getItem("floatingEnabled") !== "0");
+
+    function toggleFloating() {
+        floatingEnabled = !floatingEnabled;
+        localStorage.setItem("floatingEnabled", floatingEnabled ? "1" : "0");
+    }
+
     // 资源包列表
     let respackList: RespackEntry[] = $state([]);
     let file: File = $state(null);
@@ -145,6 +153,26 @@
                     ></TextSwitchButton>
                 {/if}
             </div>
+
+            <!-- 悬浮窗设置列（仅移动端显示） -->
+            {#if isMobile}
+            <div class="settings-column-flex">
+                <Label>悬浮窗设置</Label>
+                <Label small>悬浮快捷按钮
+                    <Tooltip>在编辑器页面显示悬浮快捷键按钮</Tooltip>
+                </Label>
+                <TextSwitchButton
+                    wide
+                    onText="Y"
+                    offText="N"
+                    checked={floatingEnabled}
+                    onchange={toggleFloating}
+                ></TextSwitchButton>
+                <p style="font-size: var(--font-size-smaller); color: var(--color-foreground-muted);">
+                    关闭后需刷新页面生效
+                </p>
+            </div>
+            {/if}
 
             <!-- 数据管理列 -->
             <div class="settings-column-flex">
