@@ -1,5 +1,10 @@
 <script lang="ts">
-    import { Languages } from "@lucide/svelte";
+    /**
+     * 设置页面
+     * 包含：语言设置、编辑器设置、自动保存、播放器设置、
+     * 移动端设置（字体大小、全屏）、数据管理（导入导出）、资源包管理
+     */
+    import { Languages, Download, Upload, Maximize2, Type } from "@lucide/svelte";
 
     import ProgressiveButton from "#/components/buttons/ProgressiveButton.svelte";
     import UploadButton from "#/components/buttons/UploadButton.svelte";
@@ -9,6 +14,7 @@
     import Navigator from "#/components/Navigator.svelte";
     import PopupOption from "#/components/PopupOption/PopupOption.svelte";
     import Tooltip from "#/components/Tooltip.svelte";
+    import DestructiveButton from "#/components/buttons/DestructiveButton.svelte";
     import { _, localeLangNames, locale } from "#/i18n";
     import { notify } from "#/notify.svelte";
     import {
@@ -18,11 +24,39 @@
         type RespackEntry,
     } from "#/background";
     import { KPASettings } from "#/settings.svelte";
+    import { exportAllUserData, importUserData, isMobileDevice, toggleFullscreen, isFullscreen } from "#/userData";
     import Respack from "./Respack.svelte";
 
+    // 资源包列表
     let respackList: RespackEntry[] = $state([]);
     let file: File = $state(null);
     respackList = await queryRespackList();
+
+    // 是否为移动端
+    let isMobile = $state(false);
+
+    // 导入文件
+    let importFile: File | null = $state(null);
+
+    // 字体大小选项
+    const fontSizeOptions = [
+        { value: 0.8, label: "较小 (80%)" },
+        { value: 0.9, label: "略小 (90%)" },
+        { value: 1.0, label: "正常 (100%)" },
+        { value: 1.1, label: "略大 (110%)" },
+        { value: 1.2, label: "较大 (120%)" },
+        { value: 1.3, label: "很大 (130%)" },
+    ];
+
+    // 初始化字体大小
+    $effect(() => {
+        document.documentElement.style.setProperty('--font-size-scale', KPASettings.fontSizeScale.toString());
+    });
+
+    // 检测是否为移动端
+    $effect(() => {
+        isMobile = isMobileDevice();
+    });
 </script>
 
 <main class="container">
@@ -86,6 +120,66 @@
                         ]
                     }
                 ></PopupOption>
+
+                <!-- 字体大小设置 -->
+                <Label small><Type size={16}/>字体大小</Label>
+                <PopupOption wide
+                    bind:currentOption={KPASettings.fontSizeScale}
+                    options={fontSizeOptions.map(o => o.value)}
+                    displayTexts={fontSizeOptions.map(o => o.label)}
+                    onchange={() => {
+                        document.documentElement.style.setProperty('--font-size-scale', KPASettings.fontSizeScale.toString());
+                    }}
+                ></PopupOption>
+
+                <!-- 自动全屏设置（仅移动端显示） -->
+                {#if isMobile}
+                    <Label small><Maximize2 size={16}/>自动全屏
+                        <Tooltip>进入编辑器时自动进入全屏模式</Tooltip>
+                    </Label>
+                    <TextSwitchButton
+                        wide
+                        onText="Y"
+                        offText="N"
+                        bind:checked={KPASettings.autoFullscreen}
+                    ></TextSwitchButton>
+                {/if}
+            </div>
+
+            <!-- 数据管理列 -->
+            <div class="settings-column-flex">
+                <Label>数据管理</Label>
+                <p style="font-size: var(--font-size-smaller); color: var(--color-foreground-muted);">
+                    导出或导入您的所有用户数据（谱面、设置、资源包等）
+                </p>
+
+                {/* 导出数据 */}
+                <ProgressiveButton onclick={exportAllUserData}>
+                    <Download size={16}/>
+                    导出数据 (.kyud)
+                </ProgressiveButton>
+
+                {/* 导入数据 */}
+                <div class="import-section">
+                    <UploadButton accept=".kyud,.zip" bind:file={importFile}></UploadButton>
+                    <ProgressiveButton
+                        onclick={async () => {
+                            if (importFile) {
+                                await importUserData(importFile, true);
+                            } else {
+                                notify("请先选择文件", "warning");
+                            }
+                        }}
+                        disabled={!importFile}
+                    >
+                        <Upload size={16}/>
+                        导入数据
+                    </ProgressiveButton>
+                </div>
+
+                <p style="font-size: var(--font-size-smaller); color: var(--color-foreground-muted); margin-top: 1em;">
+                    .kyud 格式是 Kipphi Apparatus 的用户数据备份格式，本质是 ZIP 压缩包
+                </p>
             </div>
             <div class="settings-column hotkeys">
                 <div class="whole-row">
@@ -260,6 +354,25 @@
             box-sizing: border-box;
             border: 1px solid var(--color-border);
         }
+    }
+
+    /* 导入区域样式 */
+    .import-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1vh;
+        width: 100%;
+    }
+
+    .import-section button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .settings-column-flex button {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
     }
 
     /* 响应式适配 */

@@ -1,4 +1,14 @@
 <script lang="ts">
+/**
+ * 谱面编辑器页面
+ * 功能：
+ * - 谱面编辑主界面
+ * - 播放器、音符编辑器、事件编辑器
+ * - 侧边栏面板（可收缩）
+ * - 自动保存功能
+ * - 移动端悬浮快捷键
+ * - 全屏模式
+ */
 import { Player, AudioProcessor, Images } from "kipphi-player";
 import { EventSequenceEditors, NotesEditor, NotesEditorState } from "kipphi-canvas-editor";
 import type { PageData } from "./$types";
@@ -8,6 +18,7 @@ import { Chart, EventEndNode, EventStartNode, EventType, KPAError, NoteType, Op 
 import { _ } from "#/i18n";
 
 import AutoSaveRunner from "./autosaveRunner";
+import { saveChart } from "./save";
 
 import PlayButton from "#/components/IconButtons/PlayButton.svelte";
 import GridSwitch from "#/components/IconButtons/GridSwitch.svelte";
@@ -15,6 +26,7 @@ import PopupOption from "#/components/PopupOption/PopupOption.svelte";
 import TimeDivisorPicker from "#/components/IconButtons/TimeDivisorPicker.svelte";
 import SwitchButton from "#/components/IconButtons/SwitchButton.svelte";
 import TextSwitchButton from "#/components/IconButtons/TextSwitchButton.svelte";
+import FloatingButton from "#/components/FloatingButton.svelte";
     import ArrowedInput from "#/components/Inputs/ArrowedInput.svelte";
     import Label from "#/components/Label.svelte";
     import UnitInput from "#/components/Inputs/UnitInput.svelte";
@@ -42,6 +54,7 @@ import { Sidebar, init as EditorGlobalInit, SecondarySidebar, restoreStates,
     import { notify } from "#/notify.svelte";
     import { respack, waitRespack } from "#/respack.svelte";
     import { fetchTexture } from "#/background";
+    import { isMobileDevice, enterFullscreen } from "#/userData";
     import Errors from "./Errors.svelte";
     import { Redo2, Undo2, Home } from "@lucide/svelte";
     import { goto } from "$app/navigation";
@@ -482,6 +495,15 @@ onMount(async () => {
         AutoSaveRunner.run();
     }
 
+    // 移动端自动全屏
+    if (KPASettings.autoFullscreen && isMobileDevice()) {
+        // 需要用户交互后才能进入全屏，这里延迟尝试
+        setTimeout(() => {
+            enterFullscreen().catch(() => {
+                // 自动全屏失败不影响使用
+            });
+        }, 1000);
+    }
 
     EditorGlobalInit(notesEditor, eventSequenceEditors, operationList, player);
     restoreStates();
@@ -778,6 +800,24 @@ updateTip();
         </div>
     </div>
 </main>
+
+<!-- 移动端悬浮快捷键按钮 -->
+<FloatingButton
+    onPlayPause={() => {
+        if (isPlaying) {
+            player.pause();
+        } else {
+            play();
+        }
+    }}
+    onUndo={() => operationList.undo()}
+    onRedo={() => operationList.redo()}
+    onSave={() => {
+        saveChart(operationList.chart, "Manual save");
+        notify("保存成功", "info");
+    }}
+    onHome={() => goto(`${base}/`)}
+/>
 {/if}
 
 <style lang="less">
