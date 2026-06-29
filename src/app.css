@@ -39,8 +39,7 @@ html {
     min-height: var(--dvh);
     background: var(--color-bg, #fafafa);
     font-family: phigros, sans-serif;
-    overflow: hidden;
-    /* 阻止 Safari 页面拖动（橡皮筋效果） */
+    /* 阻止 Safari 页面拖动（橡皮筋效果），不影响正常滚动 */
     overscroll-behavior: none;
     -webkit-overflow-scrolling: auto;
     user-select: none;

@@ -38,7 +38,7 @@
 
     .container {
         background-color: var(--color-bg);
-        height: 100%;
+        min-height: var(--dvh);
         color: var(--color-foreground);
     }
 
