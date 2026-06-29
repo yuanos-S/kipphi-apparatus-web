@@ -2,16 +2,15 @@ import { get, writable } from "svelte/store";
 import { type NotesEditor, type EventSequenceEditors, NotesEditorState, EventCurveEditorState, SelectState, NewNodeState } from "kipphi-canvas-editor"
 import { easingArray, EventEndNode, EventNode, EventStartNode, EventType, NNList, Note, NoteType, type ExtendedEventTypeName, type Op } from "kipphi";
 import type { Player } from "kipphi-player";
+
 type OperationList = Op.OperationList;
 
-/** @enum */
 export const Sidebar = {
     DEFAULT: 0,
     NOTES: 1,
     EVENTS: 2
-}
+} as const;
 
-/** @enum */
 export const SecondarySidebar = {
     LINES: 0,
     NOTE: 1,
@@ -22,26 +21,47 @@ export const SecondarySidebar = {
     MULTI_NOTE: 6,
     ERRORS: 7,
     GENERAL: 8
-}
+} as const;
+
+let _player: Player | null = null;
+let _notesEditor: NotesEditor | null = null;
+let _eventSequenceEditors: EventSequenceEditors | null = null;
+let _operationList: OperationList | null = null;
+let _chartId: string = "";
+
+export function getPlayer(): Player | null { return _player; }
+export function getNotesEditor(): NotesEditor | null { return _notesEditor; }
+export function getEventSequenceEditors(): EventSequenceEditors | null { return _eventSequenceEditors; }
+export function getOperationList(): OperationList | null { return _operationList; }
+export function getChartId(): string { return _chartId; }
 
 export let player: Player;
 export let notesEditor: NotesEditor;
 export let eventSequenceEditors: EventSequenceEditors;
-export let chartId: string;
-export function setID(id: string) { chartId = id; }
 export let operationList: OperationList;
-export function init(ne: NotesEditor, ece: EventSequenceEditors, ol: OperationList, pl: Player) {
+export let chartId: string;
+
+export function setID(id: string) { _chartId = id; chartId = id; }
+
+export function init(
+    ne: NotesEditor,
+    ece: EventSequenceEditors,
+    ol: OperationList,
+    pl: Player
+) {
+    _notesEditor = ne;
+    _eventSequenceEditors = ece;
+    _operationList = ol;
+    _player = pl;
     notesEditor = ne;
     eventSequenceEditors = ece;
     operationList = ol;
     player = pl;
 }
 
-// GlobalContext - 每个属性独立的 writable store
 export const selectedLineNumber = writable(0);
 export const activeSidebar = writable(Sidebar.DEFAULT);
 export const activeSecondarySidebar = writable(SecondarySidebar.LINES);
-/** 上一次激活的次级侧边栏，用于ctrl切线后还原 */
 export const previousActiveSecondarySidebar = writable(SecondarySidebar.LINES);
 
 export const selectedNote = writable<Note | null>(null);
@@ -50,14 +70,12 @@ export const selectedNode = writable<EventStartNode<any> | EventEndNode<any> | n
 export const selectedNodes = writable<Set<EventStartNode<any>> | null>(null);
 export const timeDivisor = writable(4);
 
-// PlayerSettings - 每个属性独立的 writable store
 export const playerShowsUI = writable(true);
 export const playerShowsLineID = writable(false);
 export const playerHitEffectNoFollows = writable(true);
 export const playerShowsCurve = writable(false);
 export const playerCameraZoom = writable(1);
 
-// NotesEditorSettings - 每个属性独立的 writable store
 export const notesEditChecked = writable(false);
 export const notesShowsNNN = writable(false);
 export const notesNoteType = writable(NoteType.tap);
@@ -67,7 +85,6 @@ export const notesPositionCenter = writable(0);
 export const notesPositionXInterval = writable(135);
 export const notesAbove = writable(true);
 
-// EventSequenceEditorSettings - 每个属性独立的 writable store
 export const eventsEditChecked = writable(false);
 export const eventsLayer = writable<"0" | "1" | "2" | "3" | "ex">("0");
 export const eventsType = writable<keyof typeof EventType>("moveX");
@@ -75,206 +92,186 @@ export const eventsTimeSpan = writable(4);
 export const eventsScopeSelectMode = writable(SelectState.none);
 export const newNodeState = writable(NewNodeState.controlsBoth);
 
-// useEasing 和 templateName 作为独立的 writable stores
 export const useEasing = writable(1);
 export const templateName = writable("");
 
-// === GlobalContext 订阅 ===
+const ALL_EVENT_TYPES = [
+    "alpha", "moveX", "moveY", "rotate", "speed",
+    "scaleX", "scaleY", "text", "color",
+    "bpm", "easing"
+] satisfies (keyof typeof EventType)[];
+
+function switchEasing(name: string) {
+    if (!_operationList || !_eventSequenceEditors) return;
+    const easing = _operationList.chart.templateEasingLib.get(name);
+    if (!easing) return;
+    const seq = easing.eventNodeSequence;
+    if (_eventSequenceEditors.activatedEditor.type === EventType.easing) {
+        _eventSequenceEditors.easing.targetEasing = easing;
+        _eventSequenceEditors.easing.target = seq;
+        _eventSequenceEditors.easing.draw();
+    }
+}
+
 selectedLineNumber.subscribe(v => {
-    if (!player) return;
-    player.greenLine = v;
-    notesEditor.target = player.chart.judgeLines[v];
-    eventSequenceEditors.changeTarget({
-        judgeLine: player.chart.judgeLines[v]
+    if (!_player || !_notesEditor || !_eventSequenceEditors) return;
+    _player.greenLine = v;
+    _notesEditor.target = _player.chart.judgeLines[v];
+    _eventSequenceEditors.changeTarget({
+        judgeLine: _player.chart.judgeLines[v]
     });
-    notesEditor.draw();
-    eventSequenceEditors.draw();
-    player.render();
+    _notesEditor.draw();
+    _eventSequenceEditors.draw();
+    _player.render();
 });
 
 timeDivisor.subscribe(v => {
-    if (!notesEditor || !eventSequenceEditors) return;
-    notesEditor.timeDivisor = v;
-    eventSequenceEditors.timeDivisor = v;
-    notesEditor.draw();
-    eventSequenceEditors.draw();
+    if (!_notesEditor || !_eventSequenceEditors) return;
+    _notesEditor.timeDivisor = v;
+    _eventSequenceEditors.timeDivisor = v;
+    _notesEditor.draw();
+    _eventSequenceEditors.draw();
 });
 
-// === PlayerSettings 订阅 ===
 playerShowsUI.subscribe(v => {
-    if (player && player.showsInfo !== v) {
-        player.showsInfo = v;
-        player.render();
+    if (_player && _player.showsInfo !== v) {
+        _player.showsInfo = v;
+        _player.render();
     }
 });
 
 playerShowsLineID.subscribe(v => {
-    if (player && player.showsLineID !== v) {
-        player.showsLineID = v;
-        player.render();
+    if (_player && _player.showsLineID !== v) {
+        _player.showsLineID = v;
+        _player.render();
     }
 });
 
 playerHitEffectNoFollows.subscribe(v => {
-    if (!player) return;
-    player.hitEffectNoFollows = v;
+    if (_player) _player.hitEffectNoFollows = v;
 });
 
 playerShowsCurve.subscribe(v => {
-    if (!player) return;
-    player.showsLineCurve = v;
+    if (_player) _player.showsLineCurve = v;
 });
 
 playerCameraZoom.subscribe(v => {
-    if (!player) return;
-    player.cameraRatio = v;
-    player.render();
-})
-
-// === NotesEditorSettings 订阅 ===
-notesEditChecked.subscribe(v => {
-    if (!notesEditor) return;
-    if (v) {
-        notesEditor.state = NotesEditorState.edit;
-    } else {
-        notesEditor.state = NotesEditorState.select;
+    if (_player) {
+        _player.cameraRatio = v;
+        _player.render();
     }
+});
+
+notesEditChecked.subscribe(v => {
+    if (!_notesEditor) return;
+    _notesEditor.state = v ? NotesEditorState.edit : NotesEditorState.select;
 });
 
 notesShowsNNN.subscribe(v => {
-    if (!notesEditor) return;
-    if (notesEditor.showsNNNListAttachable !== v) {
-        notesEditor.showsNNNListAttachable = v;
-        notesEditor.draw();
+    if (!_notesEditor) return;
+    if (_notesEditor.showsNNNListAttachable !== v) {
+        _notesEditor.showsNNNListAttachable = v;
+        _notesEditor.draw();
     }
 });
-// 特喵的codebuddy，居然忘了帮我写这个
+
 notesNoteType.subscribe(v => {
-    if (!notesEditor) return;
-    if (notesEditor.noteType !== v) {
-        notesEditor.noteType = v;
-        notesEditor.draw();
+    if (!_notesEditor) return;
+    if (_notesEditor.noteType !== v) {
+        _notesEditor.noteType = v;
+        _notesEditor.draw();
     }
 });
 
 notesTimeSpan.subscribe(v => {
-    if (!notesEditor) return;
-    notesEditor.timeSpan = v;
-    notesEditor.draw();
+    if (!_notesEditor) return;
+    _notesEditor.timeSpan = v;
+    _notesEditor.draw();
 });
 
 notesScopeSelectMode.subscribe(v => {
-    if (!notesEditor) return;
-    notesEditor.selectState = v;
+    if (!_notesEditor) return;
+    _notesEditor.selectState = v;
     if (v !== SelectState.none) {
-        notesEditor.state = NotesEditorState.selectScope;
-        notesEditor.lastSelectState = v;
+        _notesEditor.state = NotesEditorState.selectScope;
+        _notesEditor.lastSelectState = v;
     } else {
-        notesEditor.state = NotesEditorState.select;
+        _notesEditor.state = NotesEditorState.select;
     }
-    notesEditor.draw();
+    _notesEditor.draw();
 });
 
 notesPositionCenter.subscribe(v => {
-    if (!notesEditor) return;
-    notesEditor.setValueAsCenter(v);
-    notesEditor.draw();
+    if (!_notesEditor) return;
+    _notesEditor.setValueAsCenter(v);
+    _notesEditor.draw();
 });
 
 notesPositionXInterval.subscribe(v => {
-    if (!notesEditor) return;
-    notesEditor.positionGridSpan = v;
-    notesEditor.draw();
+    if (!_notesEditor) return;
+    _notesEditor.positionGridSpan = v;
+    _notesEditor.draw();
 });
 
 notesAbove.subscribe(v => {
-    if (!notesEditor) return;
-    notesEditor.noteAbove = v;
-})
+    if (_notesEditor) _notesEditor.noteAbove = v;
+});
 
-// === EventSequenceEditorSettings 订阅 ===
 eventsEditChecked.subscribe(v => {
-    if (!eventSequenceEditors) return;
-    const activatedEditor = eventSequenceEditors.activatedEditor;
-    if (v) {
-        activatedEditor.state = EventCurveEditorState.edit;
-    } else {
-        activatedEditor.state = EventCurveEditorState.select;
-    }
+    if (!_eventSequenceEditors) return;
+    const activatedEditor = _eventSequenceEditors.activatedEditor;
+    activatedEditor.state = v ? EventCurveEditorState.edit : EventCurveEditorState.select;
 });
 
 eventsLayer.subscribe(v => {
-    if (!eventSequenceEditors) return;
-    eventSequenceEditors.changeTarget({ layerID: v });
+    if (!_eventSequenceEditors) return;
+    _eventSequenceEditors.changeTarget({ layerID: v });
 });
 
 eventsType.subscribe(v => {
-    if (!eventSequenceEditors) return;
-    // @ts-expect-error TSC又在发什么颠
-    eventSequenceEditors.activatedEditor = eventSequenceEditors[v];
-    eventsEditChecked.set(eventSequenceEditors.activatedEditor.state === EventCurveEditorState.edit);
+    if (!_eventSequenceEditors) return;
+    (_eventSequenceEditors as any).activatedEditor = (_eventSequenceEditors as any)[v];
+    eventsEditChecked.set(_eventSequenceEditors.activatedEditor.state === EventCurveEditorState.edit);
     if (v === "easing") {
-        switchEasing(get(templateName))
+        switchEasing(get(templateName));
     }
 });
 
 eventsTimeSpan.subscribe(v => {
-    if (!eventSequenceEditors) return;
-    for (const key of ["alpha", "moveX", "moveY", "rotate", "speed",
-       "scaleX", "scaleY", "text", "color",
-       "bpm", "easing"] satisfies (keyof typeof EventType)[]) {
-        eventSequenceEditors[key].timeSpan = v;
+    if (!_eventSequenceEditors) return;
+    for (const key of ALL_EVENT_TYPES) {
+        (_eventSequenceEditors as any)[key].timeSpan = v;
     }
-    eventSequenceEditors.draw();
+    _eventSequenceEditors.draw();
 });
 
 eventsScopeSelectMode.subscribe(v => {
-    if (!eventSequenceEditors) return;
-    eventSequenceEditors.activatedEditor.selectState = v;
+    if (!_eventSequenceEditors) return;
+    _eventSequenceEditors.activatedEditor.selectState = v;
     if (v !== SelectState.none) {
-        eventSequenceEditors.activatedEditor.state = EventCurveEditorState.selectScope;
-        eventSequenceEditors.activatedEditor.lastSelectState = v;
+        _eventSequenceEditors.activatedEditor.state = EventCurveEditorState.selectScope;
+        _eventSequenceEditors.activatedEditor.lastSelectState = v;
     } else {
-        eventSequenceEditors.activatedEditor.state = EventCurveEditorState.select;
+        _eventSequenceEditors.activatedEditor.state = EventCurveEditorState.select;
     }
 });
 
 newNodeState.subscribe(v => {
-    if (!eventSequenceEditors) return;
-    for (const key of ["alpha", "moveX", "moveY", "rotate", "speed",
-       "scaleX", "scaleY", "text", "color",
-       "bpm", "easing"] satisfies (keyof typeof EventType)[]) {
-        eventSequenceEditors[key].newNodeState = v;
-    }
-})
-
-// === useEasing 订阅 ===
-useEasing.subscribe(v => {
-    if (eventSequenceEditors) {
-        eventSequenceEditors.useEasing = easingArray[v];
+    if (!_eventSequenceEditors) return;
+    for (const key of ALL_EVENT_TYPES) {
+        (_eventSequenceEditors as any)[key].newNodeState = v;
     }
 });
 
-const switchEasing = (name: string) => {
-
-    const easing = operationList.chart.templateEasingLib.get(name);
-    if (!easing) {
-        return;
+useEasing.subscribe(v => {
+    if (_eventSequenceEditors) {
+        _eventSequenceEditors.useEasing = easingArray[v];
     }
-    const seq = easing.eventNodeSequence
-    if (eventSequenceEditors?.activatedEditor.type === EventType.easing) {
-        eventSequenceEditors.easing.targetEasing = easing;
-        eventSequenceEditors.easing.target = seq;
-        eventSequenceEditors.easing.draw();
-    }
-}
+});
 
 templateName.subscribe(v => {
-    if (!operationList) {
-        return;
-    }
-    switchEasing(v);
-})
+    if (_operationList) switchEasing(v);
+});
 
 export function restoreStates() {
     selectedLineNumber.set(0);

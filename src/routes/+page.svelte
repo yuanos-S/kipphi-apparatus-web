@@ -10,7 +10,7 @@
   let selectedChart = undefined;
 </script>
 
-<main class="container">
+<main class="container" style="--bg-icon: url('{base}/icon.svg');">
   <Navigator>
     
     <a href="./about" class="nav-button">{$_("about.title")}</a>
@@ -87,7 +87,7 @@
   }
 
   .container {
-    background-image: url(../../static/icon.svg);
+    background-image: var(--bg-icon);
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
