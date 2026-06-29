@@ -763,6 +763,12 @@ updateTip();
     </div>
     <div id="secondary-footer">
         <span id="tips" onclick={() => {clearTimeout(timeout);updateTip()}}>Tips: {Constants.tips[tipIndex]}</span>
+        {#if KPASettings.autosaveEnabled}
+            <span class="autosave-status">
+                <span class="autosave-dot"></span>
+                自动保存已开启 ({KPASettings.autosaveInterval}s)
+            </span>
+        {/if}
         <div class="footer-actions">
             <button class="home-btn" title={$_("general.return") ?? "Return home"} onclick={() => goto(`${base}/`)}>
                 <Home size={"3.5vh"} />
@@ -822,10 +828,29 @@ updateTip();
         position: relative;
         z-index: 10;
         box-sizing: border-box;
+        gap: 2vh;
         #tips {
             flex: 1;
             font-size: 0.85em;
         }
+    }
+    .autosave-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        font-size: 0.85em;
+        opacity: 0.8;
+    }
+    .autosave-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2ecc71;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
     }
     input[type="range"] {
         flex: 1;
@@ -874,7 +899,7 @@ updateTip();
         padding: 1vh;
         box-sizing: border-box;
         scrollbar-width: none;
-        transition: width 0.3s ease, padding 0.3s ease;
+        transition: width 0.3s ease, padding 0.3s ease, right 0.3s ease;
     }
     #sidebar.collapsed {
         width: 4vh;
@@ -889,11 +914,19 @@ updateTip();
     #secondary-sidebar {
         right: 20vh;
         width: 30vh;
-        transition: right 0.3s ease, width 0.3s ease;
+        transition: right 0.3s ease, width 0.3s ease, padding 0.3s ease;
     }
     .container.sidebar-collapsed #secondary-sidebar {
         right: 4vh;
-        width: 46vh;
+        width: 0;
+        padding: 1vh 0;
+        overflow: hidden;
+    }
+    .container.sidebar-collapsed #secondary-sidebar .sidebar-content {
+        display: none;
+    }
+    .container.sidebar-collapsed #secondary-sidebar .sidebar-shadow {
+        display: none;
     }
 
     .sidebar-shadow {
