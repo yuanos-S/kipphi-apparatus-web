@@ -204,21 +204,29 @@
         bottom: 0;
         background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         z-index: 10000;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
+        align-items: safe center;
+        justify-content: safe center;
+        padding: 12px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
     }
 
     .onboarding-modal {
         background: var(--color-surface, #fff);
         border-radius: 20px;
-        padding: 32px;
+        padding: 24px 20px;
         max-width: 500px;
         width: 100%;
+        max-height: calc(var(--dvh) - 24px);
+        display: flex;
+        flex-direction: column;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         animation: modalIn 0.3s ease-out;
+        margin: auto;
     }
 
     @keyframes modalIn {
@@ -271,10 +279,13 @@
 
     .step-content {
         text-align: center;
-        min-height: 300px;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         display: flex;
         flex-direction: column;
         align-items: center;
+        padding-bottom: 8px;
     }
 
     .step-icon {
@@ -393,9 +404,10 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 32px;
-        padding-top: 20px;
+        margin-top: 16px;
+        padding-top: 12px;
         border-top: 1px solid var(--color-border, #e0e0e0);
+        flex-shrink: 0;
     }
 
     .skip-btn {
@@ -458,22 +470,49 @@
     /* 移动端适配 */
     @media (max-width: 480px) {
         .onboarding-modal {
-            padding: 24px 20px;
+            padding: 16px 14px;
             border-radius: 16px;
-        }
-
-        h2 {
-            font-size: 1.3em;
+            max-height: calc(var(--dvh) - 16px);
         }
 
         .step-icon {
-            width: 64px;
-            height: 64px;
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            font-size: 1.1em;
+            margin: 0 0 4px 0;
+        }
+
+        p {
+            font-size: 0.85em;
+        }
+
+        .lang-list {
+            gap: 8px;
+            margin-top: 12px;
         }
 
         .lang-btn {
-            padding: 12px 20px;
-            font-size: 1em;
+            padding: 10px 16px;
+            font-size: 0.95em;
+            border-radius: 10px;
+        }
+
+        .step-actions {
+            margin-top: 10px;
+            padding-top: 8px;
+        }
+
+        .skip-btn, .prev-btn, .next-btn {
+            padding: 8px 14px;
+            font-size: 0.85em;
+        }
+
+        .progress-bar {
+            margin-bottom: 16px;
         }
     }
 </style>

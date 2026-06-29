@@ -45,7 +45,7 @@
     .content {
         padding: 6em 2em 2em;
         box-sizing: border-box;
-        min-height: 100vh;
+        min-height: var(--dvh);
         display: flex;
         flex-direction: column;
         gap: 1em;

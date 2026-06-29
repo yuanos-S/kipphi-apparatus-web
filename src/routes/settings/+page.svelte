@@ -253,14 +253,15 @@
 
     .container {
         background-color: var(--color-bg);
-        height: 100%;
+        min-height: var(--dvh);
         color: var(--color-foreground);
+        overflow-y: auto;
     }
 
     .content {
-        padding: 6em 2em 2em;
+        padding: 5em 2em 2em;
         box-sizing: border-box;
-        min-height: 100vh;
+        min-height: 100%;
         display: flex;
         flex-direction: column;
         gap: 2em;
@@ -378,17 +379,28 @@
     /* 响应式适配 */
     @media (max-width: 768px) {
         .content {
-            padding: 5em 1em 1em;
+            padding: 4em 0.8em 1em;
+            gap: 1.2em;
         }
 
         .settings-columns {
             flex-direction: column;
+            gap: 1.2em;
         }
 
         .settings-column,
         .settings-column-flex {
             min-width: 100%;
             max-width: 100%;
+        }
+
+        .settings-column {
+            grid-template-columns: auto 1fr;
+            gap: 0.6vh;
+        }
+
+        h1 {
+            font-size: 1.3em;
         }
     }
 </style>
