@@ -153,13 +153,13 @@
                     导出或导入您的所有用户数据（谱面、设置、资源包等）
                 </p>
 
-                {/* 导出数据 */}
+                <!-- 导出数据 -->
                 <ProgressiveButton onclick={exportAllUserData}>
                     <Download size={16}/>
                     导出数据 (.kyud)
                 </ProgressiveButton>
 
-                {/* 导入数据 */}
+                <!-- 导入数据 -->
                 <div class="import-section">
                     <UploadButton accept=".kyud,.zip" bind:file={importFile}></UploadButton>
                     <ProgressiveButton

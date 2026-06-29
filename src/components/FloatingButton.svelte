@@ -1,18 +1,8 @@
 <script lang="ts">
-    /**
-     * 移动端悬浮按钮组件
-     * 功能：
-     * - 可拖动的悬浮按钮
-     * - 点击展开快捷键面板
-     * - 包含常用操作：播放/暂停、撤销、重做、保存、全屏等
-     * PC端自动隐藏
-     */
     import { onMount, onDestroy } from "svelte";
     import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard } from "@lucide/svelte";
     import { toggleFullscreen, isFullscreen, isMobileDevice } from "#/userData";
-    import { _ from "#/i18n";
 
-    // 位置状态
     let isDragging = $state(false);
     let showPanel = $state(false);
     let posX = $state(20);
@@ -20,15 +10,13 @@
     let isMobile = $state(false);
     let fullscreen = $state(false);
 
-    // 拖动相关
     let startX = 0;
     let startY = 0;
     let startPosX = 0;
     let startPosY = 0;
-    let dragThreshold = 5; // 拖动阈值，小于这个距离不算拖动
+    let dragThreshold = 5;
     let hasMoved = false;
 
-    // 暴露给父组件的回调
     let {
         onPlayPause,
         onUndo,
@@ -44,19 +32,14 @@
     } = $props();
 
     onMount(() => {
-        // 检测是否为移动端
         isMobile = isMobileDevice();
 
-        // 从设置中读取位置
         const savedX = localStorage.getItem("floatingBtnX");
         const savedY = localStorage.getItem("floatingBtnY");
         if (savedX) posX = parseInt(savedX);
         if (savedY) posY = parseInt(savedY);
 
-        // 监听窗口大小变化
         window.addEventListener("resize", handleResize);
-
-        // 监听全屏变化
         document.addEventListener("fullscreenchange", handleFullscreenChange);
         document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     });
@@ -75,7 +58,6 @@
         fullscreen = isFullscreen();
     }
 
-    // 开始拖动
     function handleStart(e: TouchEvent | MouseEvent) {
         e.preventDefault();
         e.stopPropagation();
@@ -98,7 +80,6 @@
         }
     }
 
-    // 拖动中
     function handleMove(e: TouchEvent | MouseEvent) {
         if (!isDragging) return;
         e.preventDefault();
@@ -111,12 +92,10 @@
             hasMoved = true;
         }
 
-        // 计算新位置，限制在屏幕内
         let newX = startPosX + deltaX;
         let newY = startPosY + deltaY;
 
-        // 限制在视口范围内
-        const btnSize = 56; // 按钮大小
+        const btnSize = 56;
         newX = Math.max(10, Math.min(window.innerWidth - btnSize - 10, newX));
         newY = Math.max(60, Math.min(window.innerHeight - btnSize - 10, newY));
 
@@ -124,11 +103,9 @@
         posY = newY;
     }
 
-    // 拖动结束
     function handleEnd() {
         isDragging = false;
 
-        // 保存位置
         localStorage.setItem("floatingBtnX", posX.toString());
         localStorage.setItem("floatingBtnY", posY.toString());
 
@@ -138,13 +115,11 @@
         document.removeEventListener("mouseup", handleEnd);
     }
 
-    // 点击按钮
     function handleClick() {
-        if (hasMoved) return; // 拖动过不触发点击
+        if (hasMoved) return;
         showPanel = !showPanel;
     }
 
-    // 执行操作
     function doAction(action: string) {
         showPanel = false;
         switch (action) {
@@ -174,7 +149,6 @@
 
 {#if isMobile}
     <div class="floating-container" style="left: {posX}px; top: {posY}px;">
-        <!-- 展开的面板 -->
         {#if showPanel}
             <div class="floating-panel">
                 <button class="panel-btn" onclick={() => doAction("playPause")} title="播放/暂停">
@@ -202,11 +176,9 @@
             </div>
         {/if}
 
-        <!-- 主按钮 -->
         <button
             class="floating-btn"
             class:dragging={isDragging}
-            on:draggable={false}
             onmousedown={handleStart}
             ontouchstart={handleStart}
             onclick={handleClick}
