@@ -13,6 +13,7 @@
     import { locale, localeLangNames } from "#/i18n";
     import { KPASettings } from "#/settings.svelte";
     import Onboarding from "#/components/Onboarding.svelte";
+    import RotatePrompt from "#/components/RotatePrompt.svelte";
     // import "#/shadcn.css"
 
     // 是否显示引导页
@@ -102,4 +103,7 @@
     {#if showOnboarding}
         <Onboarding />
     {/if}
+
+    <!-- 竖屏提示（移动端） -->
+    <RotatePrompt />
 {/if}

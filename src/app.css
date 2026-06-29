@@ -7,11 +7,35 @@
     font-display: swap;
 }
 
+/**
+ * 全局基础样式
+ * - 使用 dvh（动态视口高度）替代 vh，解决 Safari 移动端地址栏遮挡问题
+ * - 使用 env(safe-area-inset-*) 适配刘海屏/全面屏
+ * - 100dvh 在 iOS Safari 中会随地址栏收起/展开动态调整
+ */
+
+/* 动态视口高度变量 - 兼容不支持 dvh 的旧浏览器 */
+:root {
+    --dvh: 100dvh;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+}
+
+@supports not (height: 100dvh) {
+    :root {
+        --dvh: 100vh;
+    }
+}
+
 body,
 html {
     margin: 0;
     padding: 0;
     height: 100%;
+    /* 实际高度使用动态百分比+安全区域 */
+    min-height: var(--dvh);
     background: var(--color-bg, #fafafa);
     width: 100%;
     font-family: phigros, sans-serif;
@@ -19,7 +43,13 @@ html {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
+    /* Safari 禁止缩放 */
+    -webkit-touch-callout: none;
+    /* 禁止长按菜单 */
+    -webkit-overflow-scrolling: touch;
+    /* iOS 平滑滚动 */
     color-scheme: light dark;
+    padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
 }
 
 /* 颜色变量 - 统一的配色系统 */

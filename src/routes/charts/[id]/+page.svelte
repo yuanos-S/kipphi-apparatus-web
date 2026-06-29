@@ -821,11 +821,16 @@ updateTip();
 {/if}
 
 <style lang="less">
+    /**
+     * 编辑器页面样式
+     * 使用 dvh（动态视口高度）适配 Safari 移动端地址栏
+     * 使用 safe-area-inset 适配刘海屏/全面屏
+     */
     :root {
-        --player-height: 85vh;
-        --bottom-bar-height: 11vh;
-        --bottom-tips-height: 4vh;
-        --player-width: calc(100vw - 50vh);
+        --player-height: calc(0.85 * var(--dvh));
+        --bottom-bar-height: calc(0.11 * var(--dvh));
+        --bottom-tips-height: calc(0.04 * var(--dvh));
+        --player-width: calc(100vw - 50 * var(--dvh) / 100);
     }
     .container {
         display: grid;
@@ -1021,7 +1026,7 @@ updateTip();
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100vh;
+        height: var(--dvh);
         gap: 1.5em;
         color: #333;
         font-size: 1.5rem;
@@ -1045,7 +1050,7 @@ updateTip();
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100vh;
+        height: var(--dvh);
         padding: 2em;
         font-size: 1.2rem;
         color: #c00;
@@ -1108,6 +1113,76 @@ updateTip();
         width: 1px;
         height: 200vh;
         background: rgba(102, 221, 255, 0.4);
+    }
+
+    /**
+     * 移动端适配
+     * - 横屏下编辑器占满整个视口
+     * - 侧边栏在移动端自动收缩
+     * - 底部工具栏在移动端缩小以减少遮挡
+     */
+    @media (max-width: 768px) {
+        .container {
+            grid-template-columns: 1fr;
+            grid-template-rows: calc(var(--dvh) * 0.75) auto;
+        }
+
+        #inner {
+            grid-column: 1 / 2;
+            --player-width: 100vw;
+        }
+
+        #sidebar, #secondary-sidebar {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #footer {
+            flex-wrap: wrap;
+            gap: 0.5vh;
+            padding: 0.3vh 1vh;
+            min-height: auto;
+        }
+
+        #footer > * {
+            flex-shrink: 0;
+        }
+
+        #secondary-footer {
+            padding: 0.2vh 1vh;
+            min-height: auto;
+        }
+    }
+
+    /* 横屏移动端 */
+    @media (max-width: 768px) and (orientation: landscape) {
+        .container {
+            grid-template-rows: calc(var(--dvh) * 0.8) auto;
+        }
+
+        #sidebar {
+            width: 18vh;
+            padding: 0.5vh;
+        }
+
+        #sidebar.collapsed {
+            width: 3vh;
+            padding: 0.5vh 0;
+        }
+
+        #secondary-sidebar {
+            right: 18vh;
+            width: 22vh;
+            padding: 0.5vh;
+        }
+
+        .container.sidebar-collapsed #secondary-sidebar {
+            right: 3vh;
+            width: 0;
+            padding: 0.5vh 0;
+            overflow: hidden;
+        }
     }
 
 </style>

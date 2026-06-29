@@ -1,4 +1,12 @@
 <script lang="ts">
+    /**
+     * 移动端悬浮快捷键按钮
+     * - 支持拖拽移动（pointer events，兼容 Safari）
+     * - 点击展开快捷操作面板
+     * - 可切换查看快捷键列表
+     * - PC端自动隐藏
+     * - 自动避开安全区域（刘海屏等）
+     */
     import { onMount, onDestroy } from "svelte";
     import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info } from "@lucide/svelte";
     import { toggleFullscreen, isFullscreen, isMobileDevice } from "#/userData";
@@ -17,6 +25,24 @@
     let startPosY = 0;
     let dragThreshold = 5;
     let hasMoved = false;
+    let btnSize = 52;
+
+    /**
+     * 快捷键列表
+     * 展示编辑器中可用的键盘快捷键
+     */
+    const shortcuts = [
+        { key: "Space", desc: "播放/暂停" },
+        { key: "Ctrl+Z", desc: "撤销" },
+        { key: "Ctrl+Y", desc: "重做" },
+        { key: "Ctrl+S", desc: "保存" },
+        { key: "F11", desc: "全屏" },
+        { key: "1-9", desc: "切换工具" },
+        { key: "滚轮", desc: "缩放时间轴" },
+        { key: "方向键", desc: "移动音符" },
+        { key: "Delete", desc: "删除选中" },
+        { key: "Esc", desc: "取消选择" },
+    ];
 
     let {
         onPlayPause,
@@ -31,22 +57,6 @@
         onSave?: () => void;
         onHome?: () => void;
     } = $props();
-
-    const shortcuts = [
-        { key: "Space", desc: "播放/暂停" },
-        { key: "R", desc: "放置事件节点对" },
-        { key: "Q/W/E/R", desc: "放置音符(蓝/黄/红/长)" },
-        { key: "Ctrl", desc: "切换至判定线列表" },
-        { key: "滚轮", desc: "滚动时间轴" },
-        { key: "Ctrl+滚轮", desc: "切换判定线" },
-        { key: "Ctrl+S", desc: "保存谱面" },
-        { key: "Tab", desc: "切换下个序列" },
-        { key: "Shift+Tab", desc: "切换上个序列" },
-        { key: "Z", desc: "撤销" },
-        { key: "Y", desc: "重做" },
-        { key: "Delete", desc: "删除选中项" },
-        { key: "Esc", desc: "切换到谱面信息" },
-    ];
 
     onMount(() => {
         isMobile = isMobileDevice();
@@ -75,69 +85,76 @@
         fullscreen = isFullscreen();
     }
 
-    function handleStart(e: TouchEvent | MouseEvent) {
+    /** 获取安全区域边距 */
+    function getSafeInsets() {
+        const style = getComputedStyle(document.documentElement);
+        const top = parseInt(style.getPropertyValue("--safe-top")) || 0;
+        const bottom = parseInt(style.getPropertyValue("--safe-bottom")) || 0;
+        const left = parseInt(style.getPropertyValue("--safe-left")) || 0;
+        const right = parseInt(style.getPropertyValue("--safe-right")) || 0;
+        return { top, bottom, left, right };
+    }
+
+    /** 限制位置在视口内 */
+    function clampPosition(x: number, y: number) {
+        const insets = getSafeInsets();
+        const margin = 10;
+        const maxX = window.innerWidth - btnSize - margin - insets.right;
+        const maxY = window.innerHeight - btnSize - margin - insets.bottom;
+        const minX = margin + insets.left;
+        const minY = 60 + insets.top;
+        return {
+            x: Math.max(minX, Math.min(maxX, x)),
+            y: Math.max(minY, Math.min(maxY, y)),
+        };
+    }
+
+    /** pointerdown 开始拖动 */
+    function handlePointerDown(e: PointerEvent) {
         e.preventDefault();
         e.stopPropagation();
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
         isDragging = true;
         hasMoved = false;
-
-        const point = "touches" in e ? e.touches[0] : e;
-        startX = point.clientX;
-        startY = point.clientY;
+        startX = e.clientX;
+        startY = e.clientY;
         startPosX = posX;
         startPosY = posY;
-
-        if ("touches" in e) {
-            document.addEventListener("touchmove", handleMove, { passive: false });
-            document.addEventListener("touchend", handleEnd);
-        } else {
-            document.addEventListener("mousemove", handleMove);
-            document.addEventListener("mouseup", handleEnd);
-        }
     }
 
-    function handleMove(e: TouchEvent | MouseEvent) {
+    /** pointermove 拖动中 */
+    function handlePointerMove(e: PointerEvent) {
         if (!isDragging) return;
         e.preventDefault();
 
-        const point = "touches" in e ? e.touches[0] : e;
-        const deltaX = point.clientX - startX;
-        const deltaY = point.clientY - startY;
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
         if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
             hasMoved = true;
         }
 
-        let newX = startPosX + deltaX;
-        let newY = startPosY + deltaY;
-
-        const btnSize = 56;
-        newX = Math.max(10, Math.min(window.innerWidth - btnSize - 10, newX));
-        newY = Math.max(60, Math.min(window.innerHeight - btnSize - 10, newY));
-
-        posX = newX;
-        posY = newY;
+        const clamped = clampPosition(startPosX + deltaX, startPosY + deltaY);
+        posX = clamped.x;
+        posY = clamped.y;
     }
 
-    function handleEnd() {
+    /** pointerup 拖动结束 */
+    function handlePointerUp() {
         isDragging = false;
-
         localStorage.setItem("floatingBtnX", posX.toString());
         localStorage.setItem("floatingBtnY", posY.toString());
-
-        document.removeEventListener("touchmove", handleMove);
-        document.removeEventListener("touchend", handleEnd);
-        document.removeEventListener("mousemove", handleMove);
-        document.removeEventListener("mouseup", handleEnd);
     }
 
+    /** 点击按钮 */
     function handleClick() {
         if (hasMoved) return;
         showPanel = !showPanel;
         showShortcuts = false;
     }
 
+    /** 执行操作 */
     function doAction(action: string) {
         showPanel = false;
         switch (action) {
@@ -166,7 +183,10 @@
 </script>
 
 {#if isMobile}
-    <div class="floating-container" style="left: {posX}px; top: {posY}px;">
+    <div
+        class="floating-container"
+        style="left: {posX}px; top: {posY}px;"
+    >
         {#if showPanel && !showShortcuts}
             <div class="floating-panel">
                 <div class="panel-header">
@@ -176,26 +196,56 @@
                     </button>
                 </div>
                 <div class="panel-actions">
-                    <button class="panel-btn" onclick={() => doAction("playPause")} title="播放/暂停">
+                    <button
+                        class="panel-btn"
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={() => doAction("playPause")}
+                        title="播放/暂停"
+                    >
                         <Play size={20} />
                     </button>
-                    <button class="panel-btn" onclick={() => doAction("undo")} title="撤销">
+                    <button
+                        class="panel-btn"
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={() => doAction("undo")}
+                        title="撤销"
+                    >
                         <Undo2 size={20} />
                     </button>
-                    <button class="panel-btn" onclick={() => doAction("redo")} title="重做">
+                    <button
+                        class="panel-btn"
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={() => doAction("redo")}
+                        title="重做"
+                    >
                         <Redo2 size={20} />
                     </button>
-                    <button class="panel-btn" onclick={() => doAction("save")} title="保存">
+                    <button
+                        class="panel-btn"
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={() => doAction("save")}
+                        title="保存"
+                    >
                         <Save size={20} />
                     </button>
-                    <button class="panel-btn" onclick={() => doAction("fullscreen")} title="全屏">
+                    <button
+                        class="panel-btn"
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={() => doAction("fullscreen")}
+                        title="全屏"
+                    >
                         {#if fullscreen}
                             <Minimize size={20} />
                         {:else}
                             <Maximize size={20} />
                         {/if}
                     </button>
-                    <button class="panel-btn" onclick={() => doAction("home")} title="首页">
+                    <button
+                        class="panel-btn"
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={() => doAction("home")}
+                        title="首页"
+                    >
                         <Home size={20} />
                     </button>
                 </div>
@@ -224,8 +274,10 @@
         <button
             class="floating-btn"
             class:dragging={isDragging}
-            onmousedown={handleStart}
-            ontouchstart={handleStart}
+            onpointerdown={handlePointerDown}
+            onpointermove={handlePointerMove}
+            onpointerup={handlePointerUp}
+            onpointercancel={handlePointerUp}
             onclick={handleClick}
         >
             <Keyboard size={24} />
@@ -240,12 +292,15 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        /* Safari 性能优化 */
+        will-change: left, top;
+        -webkit-transform: translateZ(0);
     }
 
     .floating-btn {
-        width: 56px;
-        height: 56px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
         background: linear-gradient(135deg, #66ddff 0%, #55ccee 100%);
         border: none;
@@ -259,10 +314,8 @@
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
-
-        &:active {
-            transform: scale(0.95);
-        }
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
 
         &.dragging {
             transform: scale(1.1);
@@ -276,10 +329,22 @@
         gap: 4px;
         background: rgba(40, 40, 60, 0.95);
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border-radius: 16px;
         padding: 8px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        animation: slideIn 0.2s ease-out;
+        animation: fpSlideIn 0.2s ease-out;
+    }
+
+    @keyframes fpSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 
     .panel-header {
@@ -308,9 +373,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
 
-        &:hover {
+        &:active {
             background: rgba(255, 255, 255, 0.2);
         }
     }
@@ -341,11 +408,6 @@
         justify-content: space-between;
         padding: 4px 6px;
         border-radius: 6px;
-        transition: background 0.15s;
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
     }
 
     kbd.shortcut-key {
@@ -366,20 +428,9 @@
         white-space: nowrap;
     }
 
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: scale(0.8);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
     .panel-btn {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.1);
         border: none;
@@ -388,14 +439,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s, transform 0.2s;
-
-        &:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
 
         &:active {
-            transform: scale(0.95);
             background: rgba(102, 221, 255, 0.3);
         }
     }
