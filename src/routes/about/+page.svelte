@@ -35,46 +35,100 @@
 
 <style lang="less" scoped>
     @import "#/components/mixin.less";
-    :root {
-        --color-foreground: white;
-    }
+
     .container {
-        background-color: #777;
+        background-color: var(--color-bg);
         height: 100%;
-        h1, p, span {
-            color: var(--color-foreground);
-        }
+        color: var(--color-foreground);
     }
+
     .content {
-        padding: 10vh;
+        padding: 6em 2em 2em;
         box-sizing: border-box;
-        height: 100vh;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
+        gap: 1em;
     }
+
+    h1 {
+        color: var(--color-foreground);
+        margin: 0;
+    }
+
+    p {
+        color: var(--color-foreground);
+        font-size: var(--font-size-medium);
+        line-height: 1.6;
+        max-width: 800px;
+    }
+
     .table {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        grid-gap: 4px;
+        gap: 4px;
         border-radius: var(--border-radius);
-        border: 1px solid var(--color-foreground);
+        border: 1px solid var(--color-border);
         padding: 4px;
-    } 
+        background: var(--color-surface);
+        color: var(--color-foreground);
+
+        span {
+            padding: 0.5em;
+            background: var(--color-card-bg);
+            border-radius: 2px;
+        }
+    }
+
     .table-3 {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        grid-gap: 4px;
+        gap: 4px;
         border-radius: var(--border-radius);
-        border: 1px solid var(--color-foreground);
+        border: 1px solid var(--color-border);
         padding: 4px;
+        background: var(--color-surface);
+        color: var(--color-foreground);
+
+        span {
+            padding: 0.5em;
+            background: var(--color-card-bg);
+            border-radius: 2px;
+            font-size: var(--font-size-small);
+            word-break: break-word;
+        }
     }
+
     .notice {
-        background: #ffffff15;
-        border: 1px solid #ffffff30;
+        background: var(--color-primary-bg);
+        border: 1px solid var(--color-primary);
         border-radius: var(--border-radius);
         padding: 1em;
-        margin: 1em 0;
-        p { color: var(--color-foreground); font-size: var(--font-size-small); }
-        a { color: #6df; }
+        margin: 0.5em 0;
+
+        p {
+            color: var(--color-foreground);
+            font-size: var(--font-size-small);
+            margin: 0.5em 0;
+        }
+
+        a {
+            color: var(--color-text-link);
+        }
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+        .content {
+            padding: 5em 1em 1em;
+        }
+
+        .table {
+            grid-template-columns: 1fr;
+        }
+
+        .table-3 {
+            grid-template-columns: 1fr;
+        }
     }
 </style>

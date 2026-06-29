@@ -12,37 +12,95 @@ html {
     margin: 0;
     padding: 0;
     height: 100%;
-    background: #fafafa;
+    background: var(--color-bg, #fafafa);
     width: 100%;
     font-family: phigros, sans-serif;
     overflow: auto;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
+    color-scheme: light dark;
 }
 
+/* 颜色变量 - 统一的配色系统 */
 :root {
-    --color-foreground: black;
+    /* 基础颜色 */
+    --color-bg: #fafafa;
+    --color-surface: #ffffff;
+    --color-foreground: #1a1a1a;
+    --color-foreground-muted: #666666;
+    --color-border: #e0e0e0;
+    --color-border-strong: #999999;
+
+    /* 主题颜色 */
+    --color-primary: #6df;
+    --color-primary-hover: #5ce;
+    --color-primary-bg: rgba(102, 221, 255, 0.1);
+    --color-error: #e74c3c;
+    --color-success: #27ae60;
+
+    /* 组件特定颜色 */
+    --color-nav-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --color-card-bg: rgba(255, 255, 255, 0.8);
+    --color-input-bg: #ffffff;
+    --color-form-bg: #f0ffff;
+
+    /* 文字颜色 */
+    --color-text-primary: var(--color-foreground);
+    --color-text-secondary: var(--color-foreground-muted);
+    --color-text-inverse: #ffffff;
+    --color-text-link: var(--color-primary);
+
+    /* 阴影 */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-bg: #1a1a2e;
+        --color-surface: #2a2a3e;
+        --color-foreground: #f0f0f0;
+        --color-foreground-muted: #a0a0a0;
+        --color-border: #3a3a4e;
+        --color-border-strong: #5a5a6e;
+        --color-card-bg: rgba(42, 42, 62, 0.9);
+        --color-input-bg: #2a2a3e;
+        --color-form-bg: #2a2a3e;
+        --color-text-link: #8cf;
+    }
+}
+
+/* Windows 高对比度模式支持 */
+@media (prefers-contrast: high) {
+    :root {
+        --color-bg: #ffffff;
+        --color-foreground: #000000;
+        --color-border: #000000;
+        --color-primary: #0066cc;
+    }
 }
 
 a {
     text-decoration: none;
-    color: #6df;
+    color: var(--color-text-link);
 }
 
 a:hover {
     text-decoration: underline;
-    color: #6fd;
+    color: var(--color-primary-hover);
 }
 
 span[role="link"] {
     cursor: pointer;
-    color: #6df;
+    color: var(--color-text-link);
 }
 
 span[role="link"]:hover {
     text-decoration: underline;
-    color: #6fd;
+    color: var(--color-primary-hover);
 }
 
 /* Responsive adjustments */
@@ -56,16 +114,22 @@ span[role="link"]:hover {
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: #8885;
-    border-radius: 3px;
+    background: var(--color-border-strong);
+    border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #8888;
+    background: var(--color-foreground-muted);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
 }

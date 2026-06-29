@@ -46,7 +46,7 @@
         {/each}
       </ul>
     {:else}
-      {$_("chartIndex.noCharts")}
+      <p class="no-charts">{$_("chartIndex.noCharts")}</p>
     {/if}
   </div>
   <footer>
@@ -56,10 +56,20 @@
 </main>
 
 <style>
+  :root {
+    --color-nav-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
+
   .container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh;
+    background-image: var(--bg-icon);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 4em 1em 1em;
+    box-sizing: border-box;
   }
 
   .nav-button {
@@ -72,9 +82,7 @@
     align-content: center;
     transition: all 0.2s ease;
     border: 1px solid rgba(255,255,255,0.1);
-    &:active {
-      transform: scale(0.96);
-    }
+    flex-shrink: 0;
   }
 
   .nav-button:hover {
@@ -82,67 +90,80 @@
     border-color: rgba(102, 221, 255, 0.3);
   }
 
-  .container {
-    padding: 3em;
-  }
-
-  .container {
-    background-image: var(--bg-icon);
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
+  .nav-button:active {
+    transform: scale(0.96);
   }
 
   #content {
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: var(--color-card-bg, rgba(255, 255, 255, 0.85));
     width: 100%;
-    height: 100%;
-    padding: 0.5em;
+    flex: 1;
+    padding: 1em;
     display: flex;
     flex-direction: column;
+    gap: 0.5em;
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+
+  #content p {
+    color: var(--color-foreground);
+    margin: 0;
   }
 
   footer {
-    background-color: #f8f9fa;
-    padding: 0.2em 0.3em;
-    border-bottom-right-radius: 3px;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 7px;
-    position: fixed;
-    left: 0;
+    background-color: var(--color-nav-bg);
+    color: white;
+    padding: 0.5em 1em;
+    border-radius: 8px 8px 0 0;
+    position: sticky;
     bottom: 0;
-    border: 1px solid #666768;
+    font-size: 0.85em;
   }
 
   #charts {
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    gap: 0.5em;
+    gap: 1em;
     padding: 0.5em;
     overflow-y: auto;
     justify-content: space-evenly;
-    /* 防止底部版权信息挡住谱面列表 */
-    padding-bottom: 6em;
+    list-style: none;
+    margin: 0;
+    padding-bottom: 4em;
+  }
+
+  .no-charts {
+    text-align: center;
+    padding: 2em;
+    color: var(--color-foreground-muted);
   }
 
   .chart {
     display: block;
     border-radius: 10px;
-    background-color: #f8f9fa44;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background-color: var(--color-surface);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     clip-path: fill-box;
     position: relative;
     transition: all 0.25s ease;
     height: 40vh;
+    min-height: 200px;
+    max-height: 400px;
     overflow: hidden;
-    &:active {
-      transform: scale(0.98);
-    }
+    border: 1px solid var(--color-border);
+  }
+
+  .chart:active {
+    transform: scale(0.98);
   }
 
   .chart.selected {
     box-shadow: 0 2px 12px rgba(102, 221, 255, 0.4);
+    border-color: var(--color-primary);
   }
 
   .chart-title {
@@ -155,7 +176,9 @@
     font-size: 150%;
     padding: 0.2em 0.8em;
     background-image: linear-gradient(to bottom, #00000000, #000000aa);
+    box-sizing: border-box;
   }
+
   .chart :global(img) {
     height: 100%;
     object-fit: cover;
@@ -172,31 +195,30 @@
     -webkit-backdrop-filter: blur(6px) brightness(40%);
     opacity: 0;
     transition: opacity 0.5s ease-in;
-    transition-property: opacity;
-    transition-duration: 0.5s;
-    transition-delay: 0.6s;
-    transition-timing-function: ease-in;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em;
   }
 
   .chart:hover .chart-operations {
     opacity: 1;
-    transition-delay: 0s;
   }
 
   .chart-operations a,
   .chart-operations span {
     display: block;
     font-size: 6vh;
-    padding: 0.3em 0;
-    /* 让它内收，不要把链接点击范围扩展开 */
-    margin: auto;
-    transition-property: transform;
-    transition-duration: 0.6s;
-    transition-timing-function: ease-out;
+    min-font-size: 16px;
+    padding: 0.3em 1em;
+    color: white;
+    text-decoration: none;
+    transition: transform 0.6s ease-out, background-color 0.2s;
     transform: translateX(-24vw);
+    border-radius: 4px;
+    text-align: center;
   }
 
   .chart-operations:hover a,
@@ -206,21 +228,24 @@
 
   .edit-link {
     transition-delay: 0.15s;
+    background: rgba(102, 221, 255, 0.3);
   }
 
   .export-link {
     transition-delay: 0.3s;
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .delete-link {
-    color: red;
+    color: #ff6b6b;
     transition-delay: 0.45s;
+    background: rgba(255, 107, 107, 0.2);
   }
 
   /* Responsive */
   @media (max-width: 768px) {
     .container {
-      padding: 1em;
+      padding: 3.5em 0.5em 0.5em;
     }
     .nav-button {
       font-size: 100%;
@@ -228,24 +253,52 @@
     }
     .chart {
       height: 30vh;
+      min-height: 150px;
     }
-  }
-  @media (max-width: 480px) {
-    .container {
-      padding: 0.5em;
-    }
-    .nav-button {
-      font-size: 80%;
-    }
-    .chart {
-      height: 25vh;
-    }
-    .chart-title {
-      font-size: 100%;
-    }
-    footer {
-      font-size: 70%;
+    .chart-operations a,
+    .chart-operations span {
+      font-size: 4vh;
+      transform: translateX(-30vw);
     }
   }
 
+  @media (max-width: 480px) {
+    .container {
+      padding: 3em 0.25em 0.25em;
+    }
+    .nav-button {
+      font-size: 80%;
+      padding: 0.15em 0.3em;
+    }
+    .chart {
+      height: 25vh;
+      min-height: 120px;
+    }
+    .chart-title {
+      font-size: 100%;
+      padding: 0.15em 0.5em;
+    }
+    .chart-operations a,
+    .chart-operations span {
+      font-size: 3vh;
+      transform: translateX(-35vw);
+    }
+    footer {
+      font-size: 70%;
+      padding: 0.4em 0.8em;
+    }
+  }
+
+  /* 深色模式 */
+  @media (prefers-color-scheme: dark) {
+    #content {
+      background: var(--color-card-bg, rgba(42, 42, 62, 0.9));
+    }
+    .chart {
+      background-color: var(--color-surface);
+    }
+    footer {
+      background: var(--color-nav-bg);
+    }
+  }
 </style>

@@ -156,85 +156,126 @@
 
 <style lang="less" scoped>
     @import "#/components/mixin.less";
-    :root {
-        --color-foreground: white;
-    }
+
     .container {
-        background-color: #777;
+        background-color: var(--color-bg);
         height: 100%;
-        h1 {
-            color: var(--color-foreground);
-        }
-        .return {
-            color: var(--color-foreground);
-        }
+        color: var(--color-foreground);
     }
+
     .content {
-        padding: 10vh;
+        padding: 6em 2em 2em;
         box-sizing: border-box;
-        height: 100vh;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
+        gap: 2em;
     }
+
+    h1 {
+        color: var(--color-foreground);
+        margin: 0;
+    }
+
+    .return {
+        color: var(--color-foreground);
+    }
+
     .settings-columns {
         display: flex;
-        flex-direction: column;
         flex-wrap: wrap;
+        gap: 2em;
         width: 100%;
-        height: 100%;
     }
+
     .settings-column {
         display: grid;
         grid-template-columns: auto 1fr;
-        width: 40vh;
         align-items: center;
         gap: 1vh;
+        min-width: 300px;
+        max-width: 500px;
     }
+
     .whole-row {
         grid-column: 1 / 3;
     }
+
     .settings-column-flex {
         display: flex;
         flex-direction: column;
         gap: 1vh;
-        align-items: center;
-        width: 40vh;
+        align-items: flex-start;
+        min-width: 300px;
+        max-width: 400px;
     }
+
     .respacks {
         min-height: 20vh;
-        .respack-list {    
+        width: 100%;
+
+        .respack-list {
             overflow-y: auto;
-            scrollbar-width: none;
+            scrollbar-width: thin;
             width: 100%;
             padding: 1vh;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             gap: 1vh;
+            background: var(--color-surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+            max-height: 300px;
         }
     }
+
     input {
         width: 100%;
         .input();
         font-size: var(--font-size-medium);
+        background: var(--color-input-bg);
+        color: var(--color-foreground);
+        border: 1px solid var(--color-border);
     }
 
     p {
         font-size: var(--font-size-smaller);
-        color: var(--color-foreground);
+        color: var(--color-foreground-muted);
+        margin: 0.5em 0;
     }
+
     .hotkeys {
         gap: 2px;
+
         span {
             display: block;
             width: 100%;
             height: 100%;
-            background-color: #5557;
+            background-color: var(--color-surface);
             color: var(--color-foreground);
             border-radius: var(--border-radius);
             font-size: var(--font-size-small);
-            padding: 0.2em 0.25em;
+            padding: 0.4em 0.5em;
             box-sizing: border-box;
+            border: 1px solid var(--color-border);
+        }
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+        .content {
+            padding: 5em 1em 1em;
+        }
+
+        .settings-columns {
+            flex-direction: column;
+        }
+
+        .settings-column,
+        .settings-column-flex {
+            min-width: 100%;
+            max-width: 100%;
         }
     }
 </style>
