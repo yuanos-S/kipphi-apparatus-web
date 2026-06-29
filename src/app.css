@@ -34,20 +34,20 @@ html {
     margin: 0;
     padding: 0;
     height: 100%;
+    width: 100%;
     /* 实际高度使用动态百分比+安全区域 */
     min-height: var(--dvh);
     background: var(--color-bg, #fafafa);
-    width: 100%;
     font-family: phigros, sans-serif;
-    overflow: auto;
+    overflow: hidden;
+    /* 阻止 Safari 页面拖动（橡皮筋效果） */
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
-    /* Safari 禁止缩放 */
     -webkit-touch-callout: none;
-    /* 禁止长按菜单 */
-    -webkit-overflow-scrolling: touch;
-    /* iOS 平滑滚动 */
     color-scheme: light dark;
     padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
 }

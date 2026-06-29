@@ -13,7 +13,7 @@ import { Player, AudioProcessor, Images } from "kipphi-player";
 import { EventSequenceEditors, NotesEditor, NotesEditorState } from "kipphi-canvas-editor";
 import type { PageData } from "./$types";
 import { onMount, tick, onDestroy } from "svelte";
-import { Chart, EventEndNode, EventStartNode, EventType, KPAError, Note, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
+import { Chart, EventEndNode, EventStartNode, EventType, KPAError, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
 
 import { _ } from "#/i18n";
 
@@ -824,24 +824,15 @@ updateTip();
         notesEditChecked.set(true);
         placementActive = true;
     }}
-    onPlace={() => {
-        if (!notesEditor) return;
-        const t = notesEditor.pointedTime;
-        const x = notesEditor.pointedPositionX;
-        const target = notesEditor.target;
-        if (!target) return;
-        const nt = Note.fromKPAJSON({
-            type: $notesNoteType,
-            startTime: t,
-            endTime: t,
-            positionX: x,
-            above: $notesAbove ? 1 : 0,
-        }, null);
-        operationList.tryDo(() => new O.NoteAddOperation(nt, target.getNode(nt, true)));
+    onFinish={() => {
+        notesEditChecked.set(false);
+        placementActive = false;
     }}
     onCancelPlace={() => {
         notesEditChecked.set(false);
         placementActive = false;
+        // 撤销最后放置的音符
+        operationList.undo();
     }}
     currentNoteType={$notesNoteType}
     placementActive={placementActive}

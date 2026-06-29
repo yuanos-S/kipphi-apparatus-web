@@ -29,8 +29,7 @@
     let hasMoved = false;
 
     /** 放置模式状态 */
-    type PlaceState = "normal" | "placing" | "holdStart" | "holdEnd";
-    let placeState: PlaceState = $state("normal");
+    let placeState: "normal" | "placing" = $state("normal");
     let placingNoteType = $state(1);
 
     interface NoteTypeOption {
@@ -70,7 +69,7 @@
         onSave,
         onHome,
         onNoteTypeSelect,
-        onPlace,
+        onFinish,
         onCancelPlace,
         currentNoteType = 1,
         placementActive = false,
@@ -82,8 +81,8 @@
         onHome?: () => void;
         /** 用户选择了音符类型，进入预放置模式 */
         onNoteTypeSelect?: (type: number) => void;
-        /** 用户点击放置 */
-        onPlace?: () => void;
+        /** 用户点击完成 */
+        onFinish?: () => void;
         /** 用户点击取消放置 */
         onCancelPlace?: () => void;
         currentNoteType?: number;
@@ -186,22 +185,14 @@
     /** 选择音符类型，进入预放置模式 */
     function selectNoteType(nt: NoteTypeOption) {
         placingNoteType = nt.type;
-        if (nt.type === 2) {
-            placeState = "holdStart";
-        } else {
-            placeState = "placing";
-        }
+        placeState = "placing";
         onNoteTypeSelect?.(nt.type);
     }
 
-    /** 点击放置 */
-    function doPlace() {
-        onPlace?.();
-        // Hold: 第一次点击后进入终点设置阶段
-        if (placeState === "holdStart") {
-            placeState = "holdEnd";
-        }
-        // tap/drag/flick: 保持放置模式方便连续放置
+    /** 点击完成 */
+    function doFinish() {
+        placeState = "normal";
+        onFinish?.();
     }
 
     /** 点击取消放置 */
@@ -231,20 +222,12 @@
                 <!-- 预放置模式 -->
                 {#if placeState !== "normal"}
                     <div class="placement-header">
-                        <span class="pl-title">
-                            {#if placeState === "holdStart"}
-                                Hold: 设置起点
-                            {:else if placeState === "holdEnd"}
-                                Hold: 设置终点
-                            {:else}
-                                {getNoteLabel(placingNoteType)}
-                            {/if}
-                        </span>
+                        <span class="pl-title">{getNoteLabel(placingNoteType)}</span>
                     </div>
                     <div class="placement-actions">
-                        <button class="place-btn confirm" onpointerdown={(e) => e.stopPropagation()} onclick={doPlace}>
+                        <button class="place-btn confirm" onpointerdown={(e) => e.stopPropagation()} onclick={doFinish}>
                             <Check size={18} />
-                            {placeState === "holdStart" ? "设置起点" : "放置"}
+                            Finish
                         </button>
                         <button class="place-btn cancel" onpointerdown={(e) => e.stopPropagation()} onclick={doCancelPlace}>
                             <Ban size={18} />
