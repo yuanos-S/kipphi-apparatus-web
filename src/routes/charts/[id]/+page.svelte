@@ -146,6 +146,7 @@ let isPlaying = $state(false);
 let showingGrid = $state(true);
 let speed = $state("1.0x");
 let preservesPitch = $state(true);
+let sidebarCollapsed = $state(false);
 
 let undoAvailable = $state(false);
 let redoAvailable = $state(false);
@@ -683,8 +684,11 @@ updateTip();
             {/if}
         </div>
     </div>
-    <div id="sidebar">
+    <div id="sidebar" class:collapsed={sidebarCollapsed}>
         <div class="sidebar-shadow"></div>
+        <button class="sidebar-toggle" onclick={() => { sidebarCollapsed = !sidebarCollapsed; }}>
+            {sidebarCollapsed ? "▶" : "◀"}
+        </button>
         <div class="sidebar-content">
             <!--TimeDivisorPicker /-->
             <Label small>{$_("main.sidebar.linenumber") + ` (${data.chart.judgeLines.length ?? 0})`}</Label>
@@ -776,7 +780,6 @@ updateTip();
         --bottom-bar-height: 11vh;
         --bottom-tips-height: 4vh;
         --player-width: calc(100vw - 50vh);
-        --color-foreground: white;
     }
     .container {
         display: grid;
@@ -784,6 +787,7 @@ updateTip();
         grid-template-rows: var(--player-height) var(--bottom-bar-height) var(--bottom-tips-height);
         width: 100%;
         background-color: #444;
+        --color-foreground: white;
     }
     #inner {
         --aspect-ratio: calc(3 / 2);
@@ -797,9 +801,14 @@ updateTip();
         grid-column: 1 / 4;
         display: flex;
         align-items: center;
-        padding: 0 2vh;
+        padding: 0.5vh 2vh;
         gap: 1vh;
         background-color: #333;
+        min-height: var(--bottom-bar-height);
+        position: relative;
+        z-index: 10;
+        box-sizing: border-box;
+        flex-wrap: nowrap;
     }
     #secondary-footer {
         grid-row: 3 / 4;
@@ -807,12 +816,21 @@ updateTip();
         background-color: #333;
         color: white;
         display: flex;
+        align-items: center;
+        padding: 0.3vh 2vh;
+        min-height: var(--bottom-tips-height);
+        position: relative;
+        z-index: 10;
+        box-sizing: border-box;
         #tips {
             flex: 1;
+            font-size: 0.85em;
         }
     }
     input[type="range"] {
         flex: 1;
+        min-width: 0;
+        max-width: 100%;
     }
     #player {
         height: var(--actual-player-height); 
@@ -854,13 +872,28 @@ updateTip();
         background-color: #555;
         z-index: 1;
         padding: 1vh;
-        
         box-sizing: border-box;
         scrollbar-width: none;
+        transition: width 0.3s ease, padding 0.3s ease;
+    }
+    #sidebar.collapsed {
+        width: 4vh;
+        padding: 1vh 0.5vh;
+    }
+    #sidebar.collapsed .sidebar-content {
+        display: none;
+    }
+    #sidebar.collapsed .sidebar-shadow {
+        display: none;
     }
     #secondary-sidebar {
         right: 20vh;
         width: 30vh;
+        transition: right 0.3s ease, width 0.3s ease;
+    }
+    #sidebar.collapsed ~ #secondary-sidebar {
+        right: 4vh;
+        width: 46vh;
     }
 
     .sidebar-shadow {
@@ -870,6 +903,28 @@ updateTip();
         left: -6px;
         top: 0;
         box-shadow: -6px 0 6px -6px #000 inset;
+    }
+    .sidebar-toggle {
+        position: absolute;
+        left: -3vh;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3vh;
+        height: 6vh;
+        background: #555;
+        border: none;
+        color: white;
+        cursor: pointer;
+        font-size: 1.5vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px 0 0 4px;
+        z-index: 2;
+        transition: background 0.2s;
+    }
+    .sidebar-toggle:hover {
+        background: #666;
     }
     .sidebar-content {
         width: 100%;
@@ -882,9 +937,9 @@ updateTip();
         gap: 3px;
 
         scrollbar-width: none;
-        &:focus {
-            scroll-behavior: auto;
-        }
+    }
+    .sidebar-content:focus {
+        scroll-behavior: auto;
     }
 
     /* Loading screen */
@@ -953,9 +1008,9 @@ updateTip();
         opacity: 0.7;
         transition: opacity 0.2s;
         padding: 0.5vh;
-        &:hover {
-            opacity: 1;
-        }
+    }
+    .home-btn:hover {
+        opacity: 1;
     }
 
     /* 操作光标 */
