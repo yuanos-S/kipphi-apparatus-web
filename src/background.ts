@@ -178,3 +178,25 @@ export async function saveBinaryFileToChart(chartId: string, filename: string, d
     const impl = await getImpl();
     return impl.saveBinaryFileToChart(chartId, filename, data);
 }
+
+export type { TrashEntry } from "./background-indexeddb";
+
+export async function queryTrash() {
+    const impl = await getImpl();
+    return impl.queryTrash();
+}
+
+export async function restoreFromTrash(identifier: string) {
+    const impl = await getImpl();
+    return impl.restoreFromTrash(identifier);
+}
+
+export async function permanentlyDeleteFromTrash(identifier: string) {
+    const impl = await getImpl();
+    return impl.permanentlyDeleteFromTrash(identifier);
+}
+
+export async function emptyTrash() {
+    const impl = await getImpl();
+    return impl.emptyTrash();
+}

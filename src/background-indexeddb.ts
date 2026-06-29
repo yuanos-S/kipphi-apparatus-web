@@ -402,6 +402,8 @@ export async function disposeChart(identifier: string) {
         await dbPut(STORE_TRASH, trashKey, entry.value);
     }
 
+    await dbPut(STORE_TRASH, `trash/${identifier}/_deletedAt`, Date.now());
+
     for (const entry of entries) {
         await dbDelete(STORE_CHARTS, entry.key);
     }
@@ -531,4 +533,85 @@ export async function saveTextFileToChart(chartId: string, filename: string, con
 
 export async function saveBinaryFileToChart(chartId: string, filename: string, data: Uint8Array): Promise<void> {
     await dbPut(STORE_CHARTS, `charts/${chartId}/${filename}`, data);
+}
+
+export interface TrashEntry {
+    identifier: string;
+    title: string;
+    image: Blob;
+    type: "KPA1" | "KPA2" | "RPE";
+    deletedAt: number;
+}
+
+export async function queryTrash(): Promise<TrashEntry[]> {
+    const allKeys = await dbGetAllKeys(STORE_TRASH);
+    const trashDirs = listDir(allKeys, "trash/");
+    const trashInfos: TrashEntry[] = [];
+
+    for (const name of trashDirs) {
+        const metadataRaw = await dbGet(STORE_TRASH, `trash/${name}/metadata.json`);
+        if (!metadataRaw) continue;
+        try {
+            const metadataJson = JSON.parse(metadataRaw) as ChartMetadata;
+            const illustrationData = await dbGet(STORE_TRASH, `trash/${name}/${metadataJson.illustration}`);
+            const deletedAtKey = await dbGet(STORE_TRASH, `trash/${name}/_deletedAt`);
+            trashInfos.push({
+                identifier: name,
+                title: metadataJson.title,
+                image: illustrationData instanceof Uint8Array
+                    ? new Blob([illustrationData], { type: `image/${getExtensionFromName(metadataJson.illustration)}` })
+                    : illustrationData instanceof Blob
+                        ? illustrationData
+                        : new Blob([], { type: "image/png" }),
+                type: metadataJson.type,
+                deletedAt: typeof deletedAtKey === "number" ? deletedAtKey : Date.now()
+            });
+        } catch (e) {
+            console.error("Failed to parse trash entry:", name, e);
+        }
+    }
+    trashInfos.sort((a, b) => b.deletedAt - a.deletedAt);
+    return trashInfos;
+}
+
+export async function restoreFromTrash(identifier: string): Promise<void> {
+    const allKeys = await dbGetAllKeys(STORE_TRASH);
+    const prefix = `trash/${identifier}/`;
+    const entries: { key: string; value: any }[] = [];
+
+    for (const key of allKeys) {
+        if (key.startsWith(prefix)) {
+            const value = await dbGet(STORE_TRASH, key);
+            entries.push({ key, value });
+        }
+    }
+
+    for (const entry of entries) {
+        const chartKey = entry.key.replace("trash/", "charts/");
+        if (!entry.key.endsWith("/_deletedAt")) {
+            await dbPut(STORE_CHARTS, chartKey, entry.value);
+        }
+    }
+
+    for (const entry of entries) {
+        await dbDelete(STORE_TRASH, entry.key);
+    }
+}
+
+export async function permanentlyDeleteFromTrash(identifier: string): Promise<void> {
+    const allKeys = await dbGetAllKeys(STORE_TRASH);
+    const prefix = `trash/${identifier}/`;
+
+    for (const key of allKeys) {
+        if (key.startsWith(prefix)) {
+            await dbDelete(STORE_TRASH, key);
+        }
+    }
+}
+
+export async function emptyTrash(): Promise<void> {
+    const allKeys = await dbGetAllKeys(STORE_TRASH);
+    for (const key of allKeys) {
+        await dbDelete(STORE_TRASH, key);
+    }
 }

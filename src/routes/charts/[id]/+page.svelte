@@ -564,7 +564,7 @@ updateTip();
     <a href="{base}/" class="return-link">Return to home</a>
 </div>
 {:else}
-<main class="container">
+<main class="container" class:sidebar-collapsed={sidebarCollapsed}>
     <div id="inner" onwheel={handleWheel} style:--aspect-ratio={aspect}
         onmousemove={handleInnerMove} onmouseleave={handleInnerLeave}>
         <canvas bind:this={playerCanvas} id="player" width={playerWidth} height={KPASettings.playerHeight}>Your device does not support the HTML5 canvas element.</canvas>
@@ -891,7 +891,7 @@ updateTip();
         width: 30vh;
         transition: right 0.3s ease, width 0.3s ease;
     }
-    #sidebar.collapsed ~ #secondary-sidebar {
+    .container.sidebar-collapsed #secondary-sidebar {
         right: 4vh;
         width: 46vh;
     }

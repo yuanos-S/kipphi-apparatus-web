@@ -3,7 +3,7 @@
   import { _ } from "#/i18n";
   import ImageLoader from "#/components/ImageLoader.svelte";
   import Navigator from "#/components/Navigator.svelte";
-  import { Settings } from "@lucide/svelte";
+  import { Settings, Trash2 } from "@lucide/svelte";
   import { base } from "$app/paths";
 
   let { data }: { data: PageData } = $props();
@@ -17,6 +17,7 @@
     <a href="./settings" class="nav-button"><Settings size="20"/>{$_("chartIndex.nav.settings")}</a>
     <a href="./create" class="nav-button">{$_("chartIndex.nav.create")}</a>
     <a href="./import" class="nav-button">{$_("chartIndex.nav.import")}</a>
+    <a href="{base}/trash" class="nav-button"><Trash2 size="20"/>回收站</a>
   </Navigator>
   <div id="content">
     <p>{$_("chartIndex.licenseDeclaration")}</p>
