@@ -2,13 +2,13 @@
     import { SquaresSubtract, SquaresUnite, Replace, SquareX } from "@lucide/svelte";
     import Label from "#/components/Label.svelte";
     import TextSwitchButton from "#/components/IconButtons/TextSwitchButton.svelte";
-    import { selectedLineNumber, notesEditChecked, notesShowsNNN, notesNoteType, operationList, notesScopeSelectMode, notesTimeSpan, notesPositionCenter, notesPositionXInterval, notesEditor, notesAbove } from "./store.svelte";
+    import { selectedLineNumber, notesEditChecked, notesShowsNNN, operationList, notesScopeSelectMode, notesTimeSpan, notesPositionCenter, notesPositionXInterval, notesEditor, notesAbove } from "./store.svelte";
 
     import { _ } from "#/i18n";
     import Tooltip from "#/components/Tooltip.svelte";
     import PopupOption from "#/components/PopupOption/PopupOption.svelte";
     import { onMount } from "svelte";
-    import { NoteType, type NNList } from "kipphi";
+    import { type NNList } from "kipphi";
     import { SelectState } from "kipphi-canvas-editor";
     import UnitInput from "#/components/Inputs/UnitInput.svelte";
 
@@ -55,14 +55,6 @@
 <Label>{$_("main.sidebar.notes")}</Label>
 <TextSwitchButton wide bgText={$_("main.notes.addNote")}
     onText="+" offText="-" bind:checked={$notesEditChecked}/>
-<Label small>{$_("main.notes.noteType")}</Label>
-<PopupOption wide options={
-    [NoteType.tap, NoteType.hold, NoteType.flick, NoteType.drag]
-} displayTexts={
-    ["Tap", "Hold", "Flick", "Drag"]
-} bind:currentOption={$notesNoteType}
-></PopupOption>
-
 <TextSwitchButton wide
     bind:checked={$notesAbove}
     onText={$_("main.note.above")}
