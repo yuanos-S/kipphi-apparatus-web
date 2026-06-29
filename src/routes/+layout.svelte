@@ -68,15 +68,17 @@
      */
     async function detectLocaleByIP(): Promise<string | null> {
         try {
-            // 使用 ip-api.com 免费 API（注意有速率限制）
-            const response = await fetch("http://ip-api.com/json/?fields=country,lang");
+            // 使用 ipapi.co 免费 HTTPS API（注意有速率限制，每分钟 1000 次）
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch("https://ipapi.co/json/", { signal: controller.signal });
+            clearTimeout(timeout);
             if (!response.ok) return null;
 
             const data = await response.json();
-            const country = data.country;
-            const lang = data.lang;
+            const country = data.country_code;
 
-            // 根据国家/语言判断
+            // 根据国家判断语言
             if (country === "CN" || country === "TW" || country === "HK" || country === "MO") {
                 if (country === "TW" || country === "HK" || country === "MO") {
                     return "zh-Hant";
@@ -84,7 +86,7 @@
                 return "zh-Hans";
             }
 
-            // 其他国家默认英语
+            // 非中文地区默认英语
             return "en";
         } catch (e) {
             console.warn("IP 定位失败:", e);

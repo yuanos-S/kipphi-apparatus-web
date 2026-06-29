@@ -13,6 +13,29 @@ import {
 } from "./background";
 import { notify } from "./notify.svelte";
 
+const DB_NAME = "kipphi-apparatus";
+const DB_VERSION = 1;
+
+function openDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains("charts")) {
+                db.createObjectStore("charts");
+            }
+            if (!db.objectStoreNames.contains("respacks")) {
+                db.createObjectStore("respacks");
+            }
+            if (!db.objectStoreNames.contains("trash")) {
+                db.createObjectStore("trash");
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
 /**
  * .kyud 文件元数据结构
  */
@@ -160,6 +183,81 @@ export async function importUserData(file: File, mergeMode = true): Promise<void
                         localStorage.setItem(key, value);
                     }
                 }
+            }
+        }
+
+        // 3. 导入谱面数据到 IndexedDB
+        const chartsFolder = zip.folder("charts");
+        if (chartsFolder) {
+            const db = await openDB();
+            const chartFiles = chartsFolder.file(/.*/);
+            
+            for (const chartFile of chartFiles) {
+                const key = chartFile.name;
+                let content: string | Uint8Array;
+                
+                if (key.endsWith(".json") || key.endsWith(".txt")) {
+                    content = await chartFile.async("string");
+                } else {
+                    content = await chartFile.async("uint8array");
+                }
+                
+                // 合并模式：检查是否已存在
+                if (mergeMode) {
+                    const exists = await new Promise<boolean>((resolve) => {
+                        const tx = db.transaction("charts", "readonly");
+                        const store = tx.objectStore("charts");
+                        const req = store.getKey(key);
+                        req.onsuccess = () => resolve(req.result !== undefined);
+                        req.onerror = () => resolve(false);
+                    });
+                    if (exists) continue;
+                }
+                
+                await new Promise<void>((resolve, reject) => {
+                    const tx = db.transaction("charts", "readwrite");
+                    const store = tx.objectStore("charts");
+                    const req = store.put(content, key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            }
+        }
+
+        // 4. 导入资源包数据到 IndexedDB
+        const respacksFolder = zip.folder("respacks");
+        if (respacksFolder) {
+            const db = await openDB();
+            const respackFiles = respacksFolder.file(/.*/);
+            
+            for (const respackFile of respackFiles) {
+                const key = respackFile.name;
+                let content: string | Uint8Array;
+                
+                if (key.endsWith(".yml") || key.endsWith(".yaml") || key.endsWith(".json") || key.endsWith(".txt")) {
+                    content = await respackFile.async("string");
+                } else {
+                    content = await respackFile.async("uint8array");
+                }
+                
+                if (mergeMode) {
+                    const exists = await new Promise<boolean>((resolve) => {
+                        const tx = db.transaction("respacks", "readonly");
+                        const store = tx.objectStore("respacks");
+                        const req = store.getKey(key);
+                        req.onsuccess = () => resolve(req.result !== undefined);
+                        req.onerror = () => resolve(false);
+                    });
+                    if (exists) continue;
+                }
+                
+                await new Promise<void>((resolve, reject) => {
+                    const tx = db.transaction("respacks", "readwrite");
+                    const store = tx.objectStore("respacks");
+                    const req = store.put(content, key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
             }
         }
 
