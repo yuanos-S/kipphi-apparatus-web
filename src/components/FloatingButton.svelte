@@ -3,12 +3,13 @@
      * 移动端悬浮快捷键按钮
      * - 支持拖拽移动（pointer events，兼容 Safari）
      * - 点击展开快捷操作面板
+     * - 包含音符类型切换按钮（tap/drag/flick/hold）
      * - 可切换查看快捷键列表
      * - PC端自动隐藏
      * - 自动避开安全区域（刘海屏等）
      */
     import { onMount, onDestroy } from "svelte";
-    import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info } from "@lucide/svelte";
+    import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info, Music } from "@lucide/svelte";
     import { toggleFullscreen, isFullscreen, isMobileDevice } from "#/userData";
 
     let isDragging = $state(false);
@@ -18,6 +19,7 @@
     let posY = $state(100);
     let isMobile = $state(false);
     let fullscreen = $state(false);
+    let btnSize = 48;
 
     let startX = 0;
     let startY = 0;
@@ -25,11 +27,26 @@
     let startPosY = 0;
     let dragThreshold = 5;
     let hasMoved = false;
-    let btnSize = 52;
+
+    /**
+     * 音符类型定义
+     * 与 kipphi NoteType 枚举对应
+     */
+    interface NoteTypeOption {
+        type: number;
+        label: string;
+        icon: string;
+    }
+
+    const noteTypes: NoteTypeOption[] = [
+        { type: 1, label: "Tap", icon: "●" },
+        { type: 4, label: "Drag", icon: "◆" },
+        { type: 3, label: "Flick", icon: "▲" },
+        { type: 2, label: "Hold", icon: "■" },
+    ];
 
     /**
      * 快捷键列表
-     * 展示编辑器中可用的键盘快捷键
      */
     const shortcuts = [
         { key: "Space", desc: "播放/暂停" },
@@ -50,12 +67,16 @@
         onRedo,
         onSave,
         onHome,
+        onNoteType,
+        currentNoteType = 1,
     }: {
         onPlayPause?: () => void;
         onUndo?: () => void;
         onRedo?: () => void;
         onSave?: () => void;
         onHome?: () => void;
+        onNoteType?: (type: number) => void;
+        currentNoteType?: number;
     } = $props();
 
     onMount(() => {
@@ -77,44 +98,32 @@
         document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
     });
 
-    function handleResize() {
-        isMobile = isMobileDevice();
-    }
+    function handleResize() { isMobile = isMobileDevice(); }
+    function handleFullscreenChange() { fullscreen = isFullscreen(); }
 
-    function handleFullscreenChange() {
-        fullscreen = isFullscreen();
-    }
-
-    /** 获取安全区域边距 */
     function getSafeInsets() {
         const style = getComputedStyle(document.documentElement);
-        const top = parseInt(style.getPropertyValue("--safe-top")) || 0;
-        const bottom = parseInt(style.getPropertyValue("--safe-bottom")) || 0;
-        const left = parseInt(style.getPropertyValue("--safe-left")) || 0;
-        const right = parseInt(style.getPropertyValue("--safe-right")) || 0;
-        return { top, bottom, left, right };
-    }
-
-    /** 限制位置在视口内 */
-    function clampPosition(x: number, y: number) {
-        const insets = getSafeInsets();
-        const margin = 10;
-        const maxX = window.innerWidth - btnSize - margin - insets.right;
-        const maxY = window.innerHeight - btnSize - margin - insets.bottom;
-        const minX = margin + insets.left;
-        const minY = 60 + insets.top;
         return {
-            x: Math.max(minX, Math.min(maxX, x)),
-            y: Math.max(minY, Math.min(maxY, y)),
+            top: parseInt(style.getPropertyValue("--safe-top")) || 0,
+            bottom: parseInt(style.getPropertyValue("--safe-bottom")) || 0,
+            left: parseInt(style.getPropertyValue("--safe-left")) || 0,
+            right: parseInt(style.getPropertyValue("--safe-right")) || 0,
         };
     }
 
-    /** pointerdown 开始拖动 */
+    function clampPosition(x: number, y: number) {
+        const insets = getSafeInsets();
+        const margin = 8;
+        return {
+            x: Math.max(margin + insets.left, Math.min(window.innerWidth - btnSize - margin - insets.right, x)),
+            y: Math.max(insets.top + 60, Math.min(window.innerHeight - btnSize - margin - insets.bottom, y)),
+        };
+    }
+
     function handlePointerDown(e: PointerEvent) {
         e.preventDefault();
         e.stopPropagation();
         (e.target as HTMLElement).setPointerCapture(e.pointerId);
-
         isDragging = true;
         hasMoved = false;
         startX = e.clientX;
@@ -123,131 +132,106 @@
         startPosY = posY;
     }
 
-    /** pointermove 拖动中 */
     function handlePointerMove(e: PointerEvent) {
         if (!isDragging) return;
         e.preventDefault();
-
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
-
-        if (Math.abs(deltaX) > dragThreshold || Math.abs(deltaY) > dragThreshold) {
-            hasMoved = true;
-        }
-
-        const clamped = clampPosition(startPosX + deltaX, startPosY + deltaY);
-        posX = clamped.x;
-        posY = clamped.y;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold) hasMoved = true;
+        const c = clampPosition(startPosX + dx, startPosY + dy);
+        posX = c.x;
+        posY = c.y;
     }
 
-    /** pointerup 拖动结束 */
     function handlePointerUp() {
         isDragging = false;
         localStorage.setItem("floatingBtnX", posX.toString());
         localStorage.setItem("floatingBtnY", posY.toString());
     }
 
-    /** 点击按钮 */
     function handleClick() {
         if (hasMoved) return;
         showPanel = !showPanel;
         showShortcuts = false;
     }
 
-    /** 执行操作 */
     function doAction(action: string) {
         showPanel = false;
         switch (action) {
-            case "playPause":
-                onPlayPause?.();
-                break;
-            case "undo":
-                onUndo?.();
-                break;
-            case "redo":
-                onRedo?.();
-                break;
-            case "save":
-                onSave?.();
-                break;
+            case "playPause": onPlayPause?.(); break;
+            case "undo": onUndo?.(); break;
+            case "redo": onRedo?.(); break;
+            case "save": onSave?.(); break;
             case "fullscreen":
-                toggleFullscreen().then(() => {
-                    fullscreen = isFullscreen();
-                });
+                toggleFullscreen().then(() => { fullscreen = isFullscreen(); });
                 break;
-            case "home":
-                onHome?.();
-                break;
+            case "home": onHome?.(); break;
         }
+    }
+
+    function selectNoteType(nt: NoteTypeOption) {
+        onNoteType?.(nt.type);
     }
 </script>
 
 {#if isMobile}
-    <div
-        class="floating-container"
-        style="left: {posX}px; top: {posY}px;"
-    >
+    <div class="floating-container" style="left: {posX}px; top: {posY}px;">
         {#if showPanel && !showShortcuts}
             <div class="floating-panel">
+                <!-- 面板标题 -->
                 <div class="panel-header">
                     <span class="panel-title">快捷操作</span>
-                    <button class="shortcuts-toggle" onclick={() => { showShortcuts = true; }} title="快捷键">
-                        <Info size={16} />
+                    <button class="icon-btn" onclick={() => { showShortcuts = true; }} title="快捷键">
+                        <Info size={14} />
                     </button>
                 </div>
+
+                <!-- 操作按钮区 -->
                 <div class="panel-actions">
-                    <button
-                        class="panel-btn"
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => doAction("playPause")}
-                        title="播放/暂停"
-                    >
-                        <Play size={20} />
+                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("playPause")}>
+                        <Play size={18} />
                     </button>
-                    <button
-                        class="panel-btn"
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => doAction("undo")}
-                        title="撤销"
-                    >
-                        <Undo2 size={20} />
+                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("undo")}>
+                        <Undo2 size={18} />
                     </button>
-                    <button
-                        class="panel-btn"
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => doAction("redo")}
-                        title="重做"
-                    >
-                        <Redo2 size={20} />
+                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("redo")}>
+                        <Redo2 size={18} />
                     </button>
-                    <button
-                        class="panel-btn"
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => doAction("save")}
-                        title="保存"
-                    >
-                        <Save size={20} />
+                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("save")}>
+                        <Save size={18} />
                     </button>
-                    <button
-                        class="panel-btn"
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => doAction("fullscreen")}
-                        title="全屏"
-                    >
+                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("fullscreen")}>
                         {#if fullscreen}
-                            <Minimize size={20} />
+                            <Minimize size={18} />
                         {:else}
-                            <Maximize size={20} />
+                            <Maximize size={18} />
                         {/if}
                     </button>
-                    <button
-                        class="panel-btn"
-                        onpointerdown={(e) => e.stopPropagation()}
-                        onclick={() => doAction("home")}
-                        title="首页"
-                    >
-                        <Home size={20} />
+                    <button class="act-btn" onpointerdown={(e) => e.stopPropagation()} onclick={() => doAction("home")}>
+                        <Home size={18} />
                     </button>
+                </div>
+
+                <!-- 分隔线 -->
+                <div class="divider"></div>
+
+                <!-- 音符类型按钮区 -->
+                <div class="panel-header">
+                    <span class="panel-title"><Music size={12} /> 音符类型</span>
+                </div>
+                <div class="note-type-row">
+                    {#each noteTypes as nt}
+                        <button
+                            class="note-type-btn"
+                            class:active={currentNoteType === nt.type}
+                            onpointerdown={(e) => e.stopPropagation()}
+                            onclick={() => selectNoteType(nt)}
+                            title={nt.label}
+                        >
+                            <span class="nt-icon">{nt.icon}</span>
+                            <span class="nt-label">{nt.label}</span>
+                        </button>
+                    {/each}
                 </div>
             </div>
         {/if}
@@ -256,8 +240,8 @@
             <div class="floating-panel shortcuts-panel">
                 <div class="panel-header">
                     <span class="panel-title">快捷键</span>
-                    <button class="shortcuts-toggle" onclick={() => { showShortcuts = false; }} title="返回">
-                        <X size={16} />
+                    <button class="icon-btn" onclick={() => { showShortcuts = false; }} title="返回">
+                        <X size={14} />
                     </button>
                 </div>
                 <div class="shortcuts-list">
@@ -271,6 +255,7 @@
             </div>
         {/if}
 
+        <!-- 主浮动按钮 -->
         <button
             class="floating-btn"
             class:dragging={isDragging}
@@ -280,7 +265,7 @@
             onpointercancel={handlePointerUp}
             onclick={handleClick}
         >
-            <Keyboard size={24} />
+            <Keyboard size={22} />
         </button>
     </div>
 {/if}
@@ -292,15 +277,15 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 10px;
-        /* Safari 性能优化 */
+        gap: 8px;
         will-change: left, top;
         -webkit-transform: translateZ(0);
     }
 
+    /* 主浮动按钮 */
     .floating-btn {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         background: linear-gradient(135deg, #66ddff 0%, #55ccee 100%);
         border: none;
@@ -310,7 +295,7 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 16px rgba(102, 221, 255, 0.4);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.15s, box-shadow 0.15s;
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
@@ -318,57 +303,54 @@
         outline: none;
 
         &.dragging {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(102, 221, 255, 0.6);
+            transform: scale(1.15);
+            box-shadow: 0 6px 24px rgba(102, 221, 255, 0.6);
         }
     }
 
+    /* 面板 */
     .floating-panel {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        background: rgba(40, 40, 60, 0.95);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        gap: 6px;
+        background: rgba(30, 30, 50, 0.96);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 14px;
+        padding: 10px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
         animation: fpSlideIn 0.2s ease-out;
+        min-width: 180px;
     }
 
     @keyframes fpSlideIn {
-        from {
-            opacity: 0;
-            transform: scale(0.8);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
+        from { opacity: 0; transform: scale(0.85); }
+        to { opacity: 1; transform: scale(1); }
     }
 
     .panel-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 4px 4px 4px;
-        margin-bottom: 4px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0 2px;
     }
 
     .panel-title {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 12px;
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 11px;
         font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
-    .shortcuts-toggle {
-        width: 24px;
-        height: 24px;
+    .icon-btn {
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
         border: none;
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.6);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -376,63 +358,23 @@
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         outline: none;
+        padding: 0;
 
-        &:active {
-            background: rgba(255, 255, 255, 0.2);
-        }
+        &:active { background: rgba(255, 255, 255, 0.2); }
     }
 
+    /* 操作按钮区 - 水平排列 3x2 网格 */
     .panel-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
     }
 
-    .shortcuts-panel {
-        width: 220px;
-        max-height: 60vh;
-        overflow-y: auto;
-    }
-
-    .shortcuts-list {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        max-height: 50vh;
-        overflow-y: auto;
-    }
-
-    .shortcut-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 4px 6px;
-        border-radius: 6px;
-    }
-
-    kbd.shortcut-key {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background: rgba(102, 221, 255, 0.2);
-        border: 1px solid rgba(102, 221, 255, 0.3);
-        color: #6df;
-        font-family: monospace;
-        font-size: 11px;
-        white-space: nowrap;
-    }
-
-    .shortcut-desc {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 11px;
-        white-space: nowrap;
-    }
-
-    .panel-btn {
+    .act-btn {
         width: 40px;
         height: 40px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
         border: none;
         color: white;
         cursor: pointer;
@@ -442,9 +384,96 @@
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         outline: none;
+        transition: background 0.15s;
+
+        &:active { background: rgba(102, 221, 255, 0.3); }
+    }
+
+    /* 分隔线 */
+    .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 2px 0;
+    }
+
+    /* 音符类型按钮 */
+    .note-type-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5px;
+    }
+
+    .note-type-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 8px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1.5px solid transparent;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+        transition: all 0.15s;
+
+        .nt-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .nt-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        &.active {
+            background: rgba(102, 221, 255, 0.15);
+            border-color: rgba(102, 221, 255, 0.5);
+            color: #6df;
+        }
 
         &:active {
-            background: rgba(102, 221, 255, 0.3);
+            background: rgba(102, 221, 255, 0.25);
         }
+    }
+
+    /* 快捷键面板 */
+    .shortcuts-panel {
+        width: 200px;
+        max-height: 55vh;
+        overflow-y: auto;
+    }
+
+    .shortcuts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .shortcut-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 3px 6px;
+        border-radius: 5px;
+    }
+
+    kbd.shortcut-key {
+        display: inline-block;
+        padding: 2px 5px;
+        border-radius: 3px;
+        background: rgba(102, 221, 255, 0.15);
+        border: 1px solid rgba(102, 221, 255, 0.25);
+        color: #6df;
+        font-family: monospace;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .shortcut-desc {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 10px;
     }
 </style>

@@ -817,6 +817,8 @@ updateTip();
         notify("保存成功", "info");
     }}
     onHome={() => goto(`${base}/`)}
+    onNoteType={(type) => { notesNoteType.set(type); }}
+    currentNoteType={$notesNoteType}
 />
 {/if}
 
@@ -1117,71 +1119,95 @@ updateTip();
 
     /**
      * 移动端适配
-     * - 横屏下编辑器占满整个视口
-     * - 侧边栏在移动端自动收缩
-     * - 底部工具栏在移动端缩小以减少遮挡
+     * - 竖屏：播放器占满视口，侧边栏隐藏，底部工具栏最小化
+     * - 横屏：侧边栏缩小，播放器占主要区域
      */
     @media (max-width: 768px) {
         .container {
             grid-template-columns: 1fr;
-            grid-template-rows: calc(var(--dvh) * 0.75) auto;
+            grid-template-rows: 1fr auto;
+            height: var(--dvh);
+            overflow: hidden;
         }
 
         #inner {
             grid-column: 1 / 2;
             --player-width: 100vw;
+            height: 100%;
+        }
+
+        #player, #ne, #ece {
+            height: 100% !important;
         }
 
         #sidebar, #secondary-sidebar {
-            width: 0;
-            padding: 0;
+            width: 0 !important;
+            padding: 0 !important;
             overflow: hidden;
         }
 
         #footer {
             flex-wrap: wrap;
-            gap: 0.5vh;
-            padding: 0.3vh 1vh;
+            gap: 3px;
+            padding: 4px 6px;
             min-height: auto;
+            overflow-x: auto;
+            justify-content: center;
         }
 
         #footer > * {
             flex-shrink: 0;
+            transform: scale(0.85);
         }
 
         #secondary-footer {
-            padding: 0.2vh 1vh;
-            min-height: auto;
+            display: none;
         }
     }
 
     /* 横屏移动端 */
     @media (max-width: 768px) and (orientation: landscape) {
         .container {
-            grid-template-rows: calc(var(--dvh) * 0.8) auto;
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr auto;
         }
 
         #sidebar {
-            width: 18vh;
-            padding: 0.5vh;
+            width: 16vh !important;
+            padding: 4px !important;
         }
 
         #sidebar.collapsed {
-            width: 3vh;
-            padding: 0.5vh 0;
+            width: 3vh !important;
+            padding: 4px 0 !important;
+        }
+
+        #sidebar .sidebar-toggle {
+            left: -2.5vh;
+            width: 2.5vh;
+            height: 5vh;
+            font-size: 1.2vh;
         }
 
         #secondary-sidebar {
-            right: 18vh;
-            width: 22vh;
-            padding: 0.5vh;
+            right: 16vh;
+            width: 20vh !important;
+            padding: 4px !important;
         }
 
         .container.sidebar-collapsed #secondary-sidebar {
             right: 3vh;
-            width: 0;
-            padding: 0.5vh 0;
-            overflow: hidden;
+            width: 0 !important;
+            padding: 4px 0 !important;
+        }
+
+        #footer {
+            gap: 4px;
+            padding: 3px 6px;
+        }
+
+        #footer > * {
+            transform: scale(0.8);
         }
     }
 
