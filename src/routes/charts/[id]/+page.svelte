@@ -465,11 +465,6 @@ onMount(async () => {
     notesEditor.addEventListener("noteselected", (ev) => {
         // 放置模式下：不切换侧边栏，保持在编辑模式以便连续放置音符
         if (get(notesEditChecked)) {
-            // 使用 requestAnimationFrame 确保在 upHandler 之后恢复编辑状态
-            // 防止移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式
-            requestAnimationFrame(() => {
-                notesEditor.state = NotesEditorState.edit;
-            });
             return;
         }
         selectedNote.set(ev.note);
@@ -526,6 +521,15 @@ onMount(async () => {
         if (showingGrid) {
             notesEditor.draw(player.renderingBeats);
             eventSequenceEditors.draw(player.renderingBeats);
+        }
+    });
+
+    // 放置模式下，强制在每次 pointerup 后恢复编辑状态
+    // 放在 NotesEditor 的 upHandler 之后注册，确保在其后执行
+    // 解决移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式的问题
+    playerCanvas.addEventListener("pointerup", () => {
+        if (get(notesEditChecked)) {
+            notesEditor.state = NotesEditorState.edit;
         }
     });
 
