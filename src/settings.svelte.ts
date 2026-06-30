@@ -166,7 +166,7 @@ export const KPASettings = $state({
 
     // ==================== 外观设置 ====================
     
-    /** 开关样式：auto(自动检测) | apple(苹果风格) | classic(经典风格) */
+    /** 开关样式：auto(自动检测) | apple(苹果风格) | hmos(鸿蒙风格) | classic(经典风格) */
     get toggleStyle() {
         return localStorage.getItem("toggleStyle") || "auto";
     },

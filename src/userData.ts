@@ -275,6 +275,14 @@ export function isAppleDevice(): boolean {
     const ua = navigator.userAgent;
     return /Mac|iPhone|iPad|iPod/.test(ua) && !/Android/.test(ua);
 }
+
+/**
+ * 检测设备是否为鸿蒙设备（HarmonyOS）
+ */
+export function isHMOSDevice(): boolean {
+    const ua = navigator.userAgent;
+    return /HarmonyOS|OpenHarmony|ArkWeb/.test(ua);
+}
 /**
  * 检测设备是否为移动端
  * 通过用户代理和屏幕宽度判断

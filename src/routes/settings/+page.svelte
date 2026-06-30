@@ -25,7 +25,7 @@
         type RespackEntry,
     } from "#/background";
     import { KPASettings } from "#/settings.svelte";
-    import { exportAllUserData, importUserData, isMobileDevice, toggleFullscreen, isFullscreen, isAppleDevice } from "#/userData";
+    import { exportAllUserData, importUserData, isMobileDevice, toggleFullscreen, isFullscreen, isAppleDevice, isHMOSDevice } from "#/userData";
     import Respack from "./Respack.svelte";
 
     // 悬浮窗开关
@@ -143,17 +143,18 @@
 
                 <!-- 开关样式设置 -->
                 <Label small>开关样式
-                    <Tooltip>自动：Apple 设备用苹果风格，其它用经典风格</Tooltip>
+                    <Tooltip>自动：Apple 设备用苹果风格，鸿蒙用鸿蒙风格，其它用经典风格。也可手动选择</Tooltip>
                 </Label>
                 <PopupOption wide
                     bind:currentOption={
                         () => KPASettings.toggleStyle,
                         (val) => { KPASettings.toggleStyle = val; }
                     }
-                    options={["auto", "apple", "classic"]}
+                    options={["auto", "apple", "hmos", "classic"]}
                     displayTexts={[
-                        `自动${isAppleDevice() ? " (当前为苹果)" : " (当前为经典)"}`,
+                        `自动${isAppleDevice() ? " (当前为苹果)" : isHMOSDevice() ? " (当前为鸿蒙)" : " (当前为经典)"}`,
                         "苹果风格",
+                        "鸿蒙风格",
                         "经典风格"
                     ]}
                 ></PopupOption>
