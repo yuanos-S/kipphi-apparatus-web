@@ -1,7 +1,7 @@
 {
     "name": "kipphi-apparatus",
     "version": "2.1.4-web",
-    "description": "KipPhi Apparatus - Web Version (Phigros Chart Editor)",
+    "description": "KipPhi Apparatus - Web Version",
     "type": "module",
     "scripts": {
         "dev": "vite dev",

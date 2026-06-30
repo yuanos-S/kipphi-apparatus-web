@@ -209,11 +209,26 @@
         if (!illustrationExtension) {
             alert($_("form.alert.unknownImageType"));
         }
-        const chartContent = await chart.text();
+        let chartContent = await chart.text();
         const [chartType, title] = getTypeAndTitle(chartContent);
         const musicName = `music.${musicExtension}`;
         const chartName = `chart.${chartType === 'RPE' ? 'rpe' : 'kpa'}.json`;
         const illustrationName = `illustration.${illustrationExtension}`;
+
+        // 修正谱面 JSON 中的 illustration 字段，使其与存储的文件名一致
+        // 避免导入后曲绘不显示的问题
+        try {
+            const chartData = JSON.parse(chartContent);
+            if (chartType === 'RPE' && chartData.META?.illustration) {
+                chartData.META.illustration = illustrationName;
+            } else if (chartData.info?.illustration) {
+                chartData.info.illustration = illustrationName;
+            }
+            chartContent = JSON.stringify(chartData);
+        } catch {
+            // 解析失败则保持原样
+        }
+
         const metadata = {
             "chart": chartName,
             "durationSecs": await getDuration(music),
