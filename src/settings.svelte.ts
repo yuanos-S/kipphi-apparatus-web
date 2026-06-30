@@ -163,4 +163,14 @@ export const KPASettings = $state({
     set ipLocaleDetected(value: boolean) {
         localStorage.setItem("ipLocaleDetected", value ? "1" : "");
     },
+
+    // ==================== 外观设置 ====================
+    
+    /** 开关样式：auto(自动检测) | apple(苹果风格) | classic(经典风格) */
+    get toggleStyle() {
+        return localStorage.getItem("toggleStyle") || "auto";
+    },
+    set toggleStyle(value: string) {
+        localStorage.setItem("toggleStyle", value);
+    },
 })

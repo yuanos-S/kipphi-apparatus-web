@@ -269,6 +269,13 @@ export async function importUserData(file: File, mergeMode = true): Promise<void
 }
 
 /**
+ * 检测设备是否为 Apple 设备（macOS / iOS / iPadOS）
+ */
+export function isAppleDevice(): boolean {
+    const ua = navigator.userAgent;
+    return /Mac|iPhone|iPad|iPod/.test(ua) && !/Android/.test(ua);
+}
+/**
  * 检测设备是否为移动端
  * 通过用户代理和屏幕宽度判断
  */

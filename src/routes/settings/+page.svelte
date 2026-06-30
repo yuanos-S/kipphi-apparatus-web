@@ -9,6 +9,7 @@
     import ProgressiveButton from "#/components/buttons/ProgressiveButton.svelte";
     import UploadButton from "#/components/buttons/UploadButton.svelte";
     import TextSwitchButton from "#/components/IconButtons/TextSwitchButton.svelte";
+    import SwitchButton from "#/components/IconButtons/SwitchButton.svelte";
     import UnitInput from "#/components/Inputs/UnitInput.svelte";
     import Label from "#/components/Label.svelte";
     import Navigator from "#/components/Navigator.svelte";
@@ -24,7 +25,7 @@
         type RespackEntry,
     } from "#/background";
     import { KPASettings } from "#/settings.svelte";
-    import { exportAllUserData, importUserData, isMobileDevice, toggleFullscreen, isFullscreen } from "#/userData";
+    import { exportAllUserData, importUserData, isMobileDevice, toggleFullscreen, isFullscreen, isAppleDevice } from "#/userData";
     import Respack from "./Respack.svelte";
 
     // 悬浮窗开关
@@ -138,6 +139,23 @@
                     onchange={() => {
                         document.documentElement.style.setProperty('--font-size-scale', KPASettings.fontSizeScale.toString());
                     }}
+                ></PopupOption>
+
+                <!-- 开关样式设置 -->
+                <Label small>开关样式
+                    <Tooltip>自动：Apple 设备用苹果风格，其它用经典风格</Tooltip>
+                </Label>
+                <PopupOption wide
+                    bind:currentOption={
+                        () => KPASettings.toggleStyle,
+                        (val) => { KPASettings.toggleStyle = val; }
+                    }
+                    options={["auto", "apple", "classic"]}
+                    displayTexts={[
+                        `自动${isAppleDevice() ? " (当前为苹果)" : " (当前为经典)"}`,
+                        "苹果风格",
+                        "经典风格"
+                    ]}
                 ></PopupOption>
 
                 <!-- 自动全屏设置（仅移动端显示） -->
