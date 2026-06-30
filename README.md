@@ -27,7 +27,7 @@
 ## 在线使用
 
 访问 GitHub Pages 部署地址即可使用，无需安装任何软件。
-[部署界面]（https://kipphi.yuanos.dpdns.org/）
+[部署界面](https://kipphi.yuanos.dpdns.org/)
 
 ## 技术栈
 
