@@ -524,12 +524,19 @@ onMount(async () => {
         }
     });
 
-    // 放置模式下，强制在每次 pointerup 后恢复编辑状态
+    // 放置模式下，每次放置音符后冷却 1 秒，防止连续快速放置
     // 放在 NotesEditor 的 upHandler 之后注册，确保在其后执行
-    // 解决移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式的问题
+    let placeCooldown: ReturnType<typeof setTimeout> | null = null;
     playerCanvas.addEventListener("pointerup", () => {
         if (get(notesEditChecked)) {
-            notesEditor.state = NotesEditorState.edit;
+            notesEditor.state = NotesEditorState.select;
+            if (placeCooldown) clearTimeout(placeCooldown);
+            placeCooldown = setTimeout(() => {
+                if (get(notesEditChecked)) {
+                    notesEditor.state = NotesEditorState.edit;
+                }
+                placeCooldown = null;
+            }, 1000);
         }
     });
 
