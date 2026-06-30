@@ -4,7 +4,7 @@
 
 > Based on TeamZincs/kipphi-apparatus, licensed under MIT License.
 
-> 基于 [KipPhi Apparatus](https://github.com/TeamZincs/kipphi-apparatus) 改造的纯网页版 Phigros 谱面编辑器。
+> 基于 [KipPhi Apparatus](https://github.com/TeamZincs/kipphi-apparatus) 改造的纯网页版谱面编辑器。
 
 ## 原项目信息
 
@@ -27,6 +27,7 @@
 ## 在线使用
 
 访问 GitHub Pages 部署地址即可使用，无需安装任何软件。
+[部署界面]（https://kipphi.yuanos.dpdns.org/）
 
 ## 技术栈
 
