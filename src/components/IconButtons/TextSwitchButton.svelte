@@ -92,8 +92,9 @@
     .toggle-wrapper.wide .toggle-label {
         flex: 1;
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.2;
     }
 
     .toggle-track {
