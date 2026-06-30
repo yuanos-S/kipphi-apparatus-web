@@ -30,8 +30,8 @@
 <style lang="less" scoped>
     @import "#/components/mixin.less";
     button {
-        background-color: #f9f9f9;
-        color: black;
+        background-color: var(--color-surface);
+        color: var(--color-foreground);
         font-size: 2.5vh;
         appearance: none;
         border: none;
@@ -61,7 +61,7 @@
             opacity: 0.6;
         }
         &:hover {
-            background-color: #eee;
+            background-color: var(--color-border);
         }
     }
 </style>

@@ -42,7 +42,7 @@ function handleInput(e: Event) {
 .hex {
     font-family: 'Consolas', monospace;
     font-size: var(--font-size-smaller);
-    color: white;
+    color: var(--color-foreground);
 }
 
 input[type="color"] {

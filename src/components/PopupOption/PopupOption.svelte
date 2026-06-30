@@ -191,7 +191,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    background-color: #f0f0f0;
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
     border-radius: 8px;
     transition: background-color 0.2s ease;
     position: relative;
@@ -205,7 +206,7 @@
   }
 
   .trigger-button:hover {
-    background-color: #e0e0e0;
+    background-color: var(--color-border);
   }
 
   .default-button-content {
@@ -222,7 +223,8 @@
     max-height: 60vh;
     overflow-y: auto;
     scrollbar-width: none;
-    background-color: white;
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
     box-shadow: var(--box-shadow);
     border-radius: 8px;
     z-index: 1000;

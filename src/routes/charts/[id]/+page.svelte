@@ -524,19 +524,17 @@ onMount(async () => {
         }
     });
 
-    // 放置模式下，每次放置音符后冷却 1 秒，防止连续快速放置
-    // 放在 NotesEditor 的 upHandler 之后注册，确保在其后执行
-    let placeCooldown: ReturnType<typeof setTimeout> | null = null;
+    // 移动端：阻止 touchstart 后的 mousedown 模拟事件
+    // 否则 downHandler 会被调用两次，第二次调用会将 wasEditing 重置为 false
+    notesEditorCanvas.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+    }, { passive: false });
+
+    // 放置模式下，每次 pointerup 后强制恢复编辑状态
+    // 防止移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式
     playerCanvas.addEventListener("pointerup", () => {
         if (get(notesEditChecked)) {
-            notesEditor.state = NotesEditorState.select;
-            if (placeCooldown) clearTimeout(placeCooldown);
-            placeCooldown = setTimeout(() => {
-                if (get(notesEditChecked)) {
-                    notesEditor.state = NotesEditorState.edit;
-                }
-                placeCooldown = null;
-            }, 1000);
+            notesEditor.state = NotesEditorState.edit;
         }
     });
 
@@ -844,6 +842,9 @@ updateTip();
         notesNoteType.set(type);
         notesEditChecked.set(true);
         placementActive = true;
+        // 直接设置编辑器状态为编辑模式，确保首次点击即可放置音符
+        notesEditor.state = NotesEditorState.edit;
+        notesEditor.noteType = type;
     }}
     onFinish={() => {
         notesEditChecked.set(false);
@@ -902,6 +903,9 @@ updateTip();
         width: 100%;
         background-color: #444;
         --color-foreground: white;
+        --color-surface: #555;
+        --color-border: #666;
+        --color-foreground-muted: #aaa;
     }
     #inner {
         --aspect-ratio: calc(3 / 2);

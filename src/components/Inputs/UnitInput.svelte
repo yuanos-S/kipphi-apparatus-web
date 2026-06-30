@@ -60,7 +60,7 @@
     }
 
     .unit {
-        color: white;
+        color: var(--color-foreground);
     }
 
     .unit {
