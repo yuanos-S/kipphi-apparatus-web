@@ -9,7 +9,7 @@
      * - PC端自动隐藏
      */
     import { onMount, onDestroy } from "svelte";
-    import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info, Music, Check, Ban } from "@lucide/svelte";
+    import { Play, Pause, Undo2, Redo2, Save, Maximize, Minimize, Home, Keyboard, X, Info, Music, Check, Ban, Lock, Unlock } from "@lucide/svelte";
     import { toggleFullscreen, isFullscreen, isMobileDevice } from "#/userData";
 
     let isDragging = $state(false);
@@ -31,6 +31,25 @@
     /** 放置模式状态 */
     let placeState: "normal" | "placing" = $state("normal");
     let placingNoteType = $state(1);
+
+    /** 页面锁定状态：防止页面乱动 */
+    let pageLocked = $state(false);
+
+    /** 锁定页面：阻止滚动/拖动 */
+    function togglePageLock() {
+        pageLocked = !pageLocked;
+        if (pageLocked) {
+            document.body.style.position = "fixed";
+            document.body.style.overflow = "hidden";
+            document.body.style.width = "100%";
+            document.body.style.height = "100%";
+        } else {
+            document.body.style.position = "";
+            document.body.style.overflow = "";
+            document.body.style.width = "";
+            document.body.style.height = "";
+        }
+    }
 
     interface NoteTypeOption {
         type: number;
@@ -109,6 +128,13 @@
         window.removeEventListener("resize", handleResize);
         document.removeEventListener("fullscreenchange", handleFullscreenChange);
         document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+        // 清理：离开页面时解除锁定
+        if (pageLocked) {
+            document.body.style.position = "";
+            document.body.style.overflow = "";
+            document.body.style.width = "";
+            document.body.style.height = "";
+        }
     });
 
     function handleResize() { isMobile = isMobileDevice(); }
@@ -273,6 +299,25 @@
                             <Home size={18} />
                         </button>
                     </div>
+
+                    <!-- 分隔线 -->
+                    <div class="divider"></div>
+
+                    <!-- 页面锁定按钮 -->
+                    <button
+                        class="page-lock-btn"
+                        class:locked={pageLocked}
+                        onpointerdown={(e) => e.stopPropagation()}
+                        onclick={togglePageLock}
+                        title={pageLocked ? "解除页面锁定" : "锁定页面，防止拖动"}
+                    >
+                        {#if pageLocked}
+                            <Lock size={14} />
+                        {:else}
+                            <Unlock size={14} />
+                        {/if}
+                        <span>{pageLocked ? "已锁定" : "锁定页面"}</span>
+                    </button>
 
                     <!-- 分隔线 -->
                     <div class="divider"></div>
@@ -495,6 +540,33 @@
             color: #6df;
         }
         &:active { background: rgba(102, 221, 255, 0.25); }
+    }
+
+    /* 页面锁定按钮 */
+    .page-lock-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1.5px solid transparent;
+        color: rgba(255, 255, 255, 0.65);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+        transition: all 0.15s;
+        &:active { background: rgba(255, 255, 255, 0.12); }
+        &.locked {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: rgba(255, 193, 7, 0.4);
+            color: #ffc107;
+        }
     }
 
     /* 放置模式 */

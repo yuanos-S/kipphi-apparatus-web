@@ -13,6 +13,7 @@ import { Player, AudioProcessor, Images } from "kipphi-player";
 import { EventSequenceEditors, NotesEditor, NotesEditorState } from "kipphi-canvas-editor";
 import type { PageData } from "./$types";
 import { onMount, tick, onDestroy } from "svelte";
+import { get } from "svelte/store";
 import { Chart, EventEndNode, EventStartNode, EventType, KPAError, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
 
 import { _ } from "#/i18n";
@@ -462,6 +463,15 @@ onMount(async () => {
         notify("Error: " + e.error.message, "error")
     })
     notesEditor.addEventListener("noteselected", (ev) => {
+        // 放置模式下：不切换侧边栏，保持在编辑模式以便连续放置音符
+        if (get(notesEditChecked)) {
+            // 使用 requestAnimationFrame 确保在 upHandler 之后恢复编辑状态
+            // 防止移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式
+            requestAnimationFrame(() => {
+                notesEditor.state = NotesEditorState.edit;
+            });
+            return;
+        }
         selectedNote.set(ev.note);
         activeSecondarySidebar.set(SecondarySidebar.NOTE);
     });
