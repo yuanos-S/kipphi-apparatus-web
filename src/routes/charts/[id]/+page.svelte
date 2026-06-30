@@ -902,6 +902,8 @@ updateTip();
         z-index: 10;
         box-sizing: border-box;
         flex-wrap: nowrap;
+        /* Safari 安全区适配：底部留出 Home Indicator 空间 */
+        padding-bottom: calc(0.5vh + env(safe-area-inset-bottom, 0px));
     }
     #secondary-footer {
         grid-row: 3 / 4;
@@ -987,6 +989,9 @@ updateTip();
         box-sizing: border-box;
         scrollbar-width: none;
         transition: width 0.3s ease, padding 0.3s ease, right 0.3s ease;
+        /* Safari 安全区适配：顶部留出刘海屏空间 */
+        padding-top: max(1vh, env(safe-area-inset-top, 0px));
+        height: calc(var(--player-height) - env(safe-area-inset-bottom, 0px));
     }
     #sidebar.collapsed {
         width: 4vh;
@@ -1018,10 +1023,10 @@ updateTip();
 
     .sidebar-shadow {
         position: absolute;
-        height: var(--player-height);
         width: 6px;
         left: -6px;
         top: 0;
+        height: calc(100% - env(safe-area-inset-bottom, 0px));
         box-shadow: -6px 0 6px -6px #000 inset;
     }
     .sidebar-toggle {
@@ -1161,22 +1166,29 @@ updateTip();
      * 移动端适配
      * - 竖屏：播放器占满视口，侧边栏隐藏，底部工具栏最小化
      * - 横屏：侧边栏缩小，播放器占主要区域
+     * - Safari 适配：使用 dvh + safe-area-inset
      */
     @media (max-width: 768px) {
         .container {
             grid-template-columns: 1fr;
             grid-template-rows: 1fr auto;
             height: var(--dvh);
+            /* Safari: 确保容器不超出视口，防止页面拖动 */
+            max-height: var(--dvh);
             overflow: hidden;
         }
 
         #inner {
             grid-column: 1 / 2;
             --player-width: 100vw;
+            width: 100%;
             height: 100%;
+            /* Safari: 确保 canvas 不溢出 */
+            overflow: hidden;
         }
 
         #player, #ne, #ece {
+            width: 100% !important;
             height: 100% !important;
         }
 
@@ -1193,6 +1205,8 @@ updateTip();
             min-height: auto;
             overflow-x: auto;
             justify-content: center;
+            /* Safari: 底部安全区 */
+            padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
         }
 
         #footer > * {
@@ -1215,6 +1229,8 @@ updateTip();
         #sidebar {
             width: 16vh !important;
             padding: 4px !important;
+            padding-top: max(4px, env(safe-area-inset-top, 0px)) !important;
+            height: calc(var(--player-height) - env(safe-area-inset-bottom, 0px)) !important;
         }
 
         #sidebar.collapsed {
@@ -1233,6 +1249,8 @@ updateTip();
             right: 16vh;
             width: 20vh !important;
             padding: 4px !important;
+            padding-top: max(4px, env(safe-area-inset-top, 0px)) !important;
+            height: calc(var(--player-height) - env(safe-area-inset-bottom, 0px)) !important;
         }
 
         .container.sidebar-collapsed #secondary-sidebar {
@@ -1244,6 +1262,7 @@ updateTip();
         #footer {
             gap: 4px;
             padding: 3px 6px;
+            padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
         }
 
         #footer > * {
