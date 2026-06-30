@@ -48,21 +48,27 @@
         font-weight: bold;
         cursor: pointer;
         opacity: 60%;
+        transition: all 0.15s;
         &:hover {
             background-color: var(--color-foreground);
-            color: black;
-            border-color: black;
+            color: var(--color-bg);
+            border-color: var(--color-foreground);
             opacity: 100%;
         }
     }
     .tooltip-content {
         position: fixed;
         width: max-content;
-        z-index: 1;
-        background-color: var(--color-foreground);
+        max-width: 280px;
+        z-index: 10000;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: var(--border-radius);
-        color: black;
-        padding: var(--border-radius);
+        color: var(--color-foreground);
+        padding: 0.5em 0.75em;
         white-space: pre-wrap;
+        font-size: var(--font-size-smaller);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        line-height: 1.4;
     }
 </style>

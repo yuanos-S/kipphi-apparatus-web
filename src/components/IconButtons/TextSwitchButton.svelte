@@ -1,6 +1,9 @@
 <script lang="ts">
-    import SwitchButton from "./SwitchButton.svelte";
-
+    /**
+     * Apple 风格开关按钮
+     * - pill 形轨道 + 圆形滑块
+     * - bgText 作为标签显示在开关左侧
+     */
     
     let {
         bgText,
@@ -22,46 +25,117 @@
         onchange?: (checked: boolean) => void;
     } = $props();
 
-function len(str: string) {
-    return str.replace(/[^\x00-\xff]/g, "mm").length / 2;
-}
+    function toggle() {
+        if (disabled) return;
+        checked = !checked;
+        onChange?.(checked);
+    }
 
-function getFontSize(str: string) {
-    return !wide ? `calc(var(--font-size-medium) * 2 / ${str.length})` : "var(--font-size-medium)"
-}
-
+    function handleKeydown(e: KeyboardEvent) {
+        if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            toggle();
+        }
+    }
 </script>
 
-<SwitchButton wide={wide} primary class={className} disabled={disabled} bind:checked onchange={onChange}>
-    {#snippet content(on)}
-        
-        {#if bgText}<div class="bg" style:font-size={getFontSize(bgText)}>{bgText}</div>{/if}
-        <div class="bigText"
-            style:color={disabled ? "black" : (on ? "#4c8" : "#f32")}
-            style:font-size={getFontSize(on ? onText : offText)}>{on ? onText : offText}</div>
-    {/snippet}
-</SwitchButton>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div
+    class="toggle-wrapper {className}"
+    class:wide
+    class:disabled
+    role="switch"
+    aria-checked={checked}
+    tabindex={disabled ? -1 : 0}
+    onclick={toggle}
+    onkeydown={handleKeydown}
+>
+    {#if bgText}
+        <span class="toggle-label">{bgText}</span>
+    {/if}
+    <div class="toggle-track" class:on={checked}>
+        <div class="toggle-knob"></div>
+    </div>
+    {#if onText && offText}
+        <span class="toggle-state-text">{checked ? onText : offText}</span>
+    {/if}
+</div>
 
 <style>
-    .bg {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        color: #888;
-        align-content: center;
-        text-align: center;
-        font-size: 5vh;
+    .toggle-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6em;
+        cursor: pointer;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        padding: 0.2em 0;
     }
-    .bigText {
-        position: absolute;
-        font-size: 5vh;
-        font-weight: bold;
-        top: 0;
-        right: 0;
+    .toggle-wrapper.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    .toggle-wrapper.wide {
+        display: flex;
         width: 100%;
-        height: 100%;
-        align-content: center;
+        justify-content: space-between;
+    }
+
+    .toggle-label {
+        font-size: var(--font-size-small);
+        color: var(--color-foreground);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .toggle-wrapper.wide .toggle-label {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .toggle-track {
+        position: relative;
+        width: 44px;
+        height: 26px;
+        border-radius: 13px;
+        background: #ccc;
+        transition: background 0.25s ease;
+        flex-shrink: 0;
+    }
+    .toggle-track.on {
+        background: #34c759;
+    }
+
+    .toggle-knob {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        transition: transform 0.25s ease;
+    }
+    .toggle-track.on .toggle-knob {
+        transform: translateX(18px);
+    }
+
+    .toggle-state-text {
+        font-size: var(--font-size-smaller);
+        color: var(--color-foreground);
+        opacity: 0.6;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: 1.5em;
         text-align: center;
-        /* text-shadow: 1px 1px 2px #222; */
+    }
+
+    .toggle-wrapper:focus-visible .toggle-track {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
     }
 </style>
