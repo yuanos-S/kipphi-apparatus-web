@@ -116,8 +116,8 @@
         class:drop-active={isDragOver}
         role="link"
         tabindex="0"
-        onclick={() => goto(`${base}/create`)}
-        onkeydown={(e: KeyboardEvent) => { if (e.key === "Enter") goto(`${base}/create`); }}
+        onclick={handleImportClick}
+        onkeydown={(e: KeyboardEvent) => { if (e.key === "Enter") handleImportClick(); }}
         ondragover={handleDragOver}
         ondragleave={handleDragLeave}
         ondrop={handleDrop}
