@@ -4,7 +4,7 @@
   import ImageLoader from "#/components/ImageLoader.svelte";
   import { base } from "$app/paths";
   import { 
-    Settings, Download, FilePlus, Trash2, 
+    Settings, Download, FilePlus, Trash2, Github,
     X, Check 
   } from "@lucide/svelte";
   import { goto } from "$app/navigation";
@@ -120,6 +120,12 @@
       {:else}
         <p class="no-charts">{$_("chartIndex.noCharts")}</p>
       {/if}
+    </div>
+
+    <div class="page-footer">
+      <a href="https://github.com/TeamZincs/kipphi-apparatus" target="_blank" rel="noopener" title="原版仓库"><Github size="16" /></a>
+      <span>Kipphi Apparatus &copy; 2025 TeamZincs, MIT Licensed.</span>
+      <a href="https://github.com/yuanos-S/kipphi-apparatus-web" target="_blank" rel="noopener" title="Web版仓库"><Github size="16" /></a>
     </div>
   </div>
 </main>
@@ -387,6 +393,26 @@
   .edit-link { transition-delay: 0.15s; background: rgba(102, 221, 255, 0.3); }
   .export-link { transition-delay: 0.3s; background: rgba(255, 255, 255, 0.2); }
   .delete-link { color: #ff6b6b; transition-delay: 0.45s; background: rgba(255, 107, 107, 0.2); }
+
+  /* 页面底部版权 */
+  .page-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 0.5em 0;
+    color: var(--color-foreground-muted);
+    font-size: 0.75em;
+  }
+  .page-footer a {
+    color: var(--color-foreground-muted);
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+  }
+  .page-footer a:hover {
+    color: #6df;
+  }
 
   /* ========== 导入弹窗 ========== */
   .modal-overlay {
