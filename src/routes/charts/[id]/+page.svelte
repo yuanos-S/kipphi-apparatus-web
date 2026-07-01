@@ -817,23 +817,23 @@ updateTip();
             <Redo2 size={"4vh"} opacity={redoAvailable ? 1 : 0.2} onclick={() => operationList.redo()}/>
         </div>
     </div>
-    <FloatingButton
-        onPlayPause={togglePlay}
-        onUndo={() => operationList.undo()}
-        onRedo={() => operationList.redo()}
-        onNoteTypeSelect={(type) => {
-            notesNoteType.set(type);
-            notesEditChecked.set(true);
-            placementActive = true;
-            notesEditor.state = NotesEditorState.edit;
-            notesEditor.noteType = type;
-        }}
-        {placementActive}
-        {isPlaying}
-        onSave={saveChart}
-        onFullscreen={enterFullscreen}
-    />
 </main>
+<FloatingButton
+    onPlayPause={togglePlay}
+    onUndo={() => operationList.undo()}
+    onRedo={() => operationList.redo()}
+    onNoteTypeSelect={(type) => {
+        notesNoteType.set(type);
+        notesEditChecked.set(true);
+        placementActive = true;
+        notesEditor.state = NotesEditorState.edit;
+        notesEditor.noteType = type;
+    }}
+    {placementActive}
+    {isPlaying}
+    onSave={saveChart}
+    onFullscreen={enterFullscreen}
+/>
 {/if}
 
 <style lang="less">

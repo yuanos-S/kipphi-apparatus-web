@@ -25,8 +25,8 @@
     } = $props();
 
     let panelOpen = $state(false);
-    let posX = $state(16);
-    let posY = $state(16);
+    let posX = $state(typeof window !== "undefined" ? window.innerWidth - 60 : 16);
+    let posY = $state(typeof window !== "undefined" ? window.innerHeight - 180 : 16);
     let dragging = $state(false);
     let dragStartX = $state(0);
     let dragStartY = $state(0);
