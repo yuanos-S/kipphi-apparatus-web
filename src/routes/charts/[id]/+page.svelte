@@ -72,17 +72,18 @@ let loading: boolean = $state(true);
 
 
 const audio = new Audio(URL.createObjectURL(data.music));
-audio.addEventListener("timeupdate", () => {
-    if (!player?.playing) {
-        return;
-    }
+
+function handleAudioTimeUpdate() {
+    if (!player?.playing) return;
     pre0 = 0;
     progressBar.value = audio.currentTime + '';
-});
-audio.addEventListener("ended", () => {
+}
+function handleAudioEnded() {
     player?.pause();
     isPlaying = false;
-})
+}
+audio.addEventListener("timeupdate", handleAudioTimeUpdate);
+audio.addEventListener("ended", handleAudioEnded);
 
 // 初始化资源包、图片、音频处理器 — 并行加载加速启动
 let illustration: ImageBitmap;
@@ -410,15 +411,13 @@ onMount(async () => {
     );
     notesEditor.target = chart.judgeLines[0];
     notesEditor.showsNNNListAttachable = false;
-    notesEditorCanvas.addEventListener("click", () => {
-        activeSidebar.set(Sidebar.NOTES);
-    });
-    eventSequenceEditorCanvas.addEventListener("click", () => {
-        activeSidebar.set(Sidebar.EVENTS);
-    })
-    playerCanvas.addEventListener("click", () => {
-        activeSidebar.set(Sidebar.DEFAULT);
-    })
+
+    function handleNotesEditorClick() { activeSidebar.set(Sidebar.NOTES); }
+    function handleEventEditorClick() { activeSidebar.set(Sidebar.EVENTS); }
+    function handlePlayerClick() { activeSidebar.set(Sidebar.DEFAULT); }
+    notesEditorCanvas.addEventListener("click", handleNotesEditorClick);
+    eventSequenceEditorCanvas.addEventListener("click", handleEventEditorClick);
+    playerCanvas.addEventListener("click", handlePlayerClick);
     eventSequenceEditors = new EventSequenceEditors(
         eventSequenceEditorCanvas,
         [0, 0, 600, 900],
@@ -524,13 +523,25 @@ onMount(async () => {
         }
     });
 
+// 移动端：iOS 上 touchstart→touchend→mousedown 依次触发，
+    // touchend 后状态已恢复为 edit，mousedown 会再次触发 downHandler 创建重复音符。
+    // 使用 capture 阶段拦截 mousedown，阻止其到达 NotesEditor 的 handler。
+    if (isMobileDevice()) {
+        function handleMousedownCapture(e: MouseEvent) {
+            if (get(notesEditChecked)) {
+                e.stopImmediatePropagation();
+            }
+        }
+        notesEditorCanvas.addEventListener("mousedown", handleMousedownCapture, true);
+    }
+
     // 放置模式下，每次 pointerup 后强制恢复编辑状态
-    // 防止移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式
-    playerCanvas.addEventListener("pointerup", () => {
+    function handlePlayerPointerUp() {
         if (get(notesEditChecked)) {
             notesEditor.state = NotesEditorState.edit;
         }
-    });
+    }
+    playerCanvas.addEventListener("pointerup", handlePlayerPointerUp);
 
     // 释放内存
     // data.chart = null;
@@ -539,6 +550,8 @@ onMount(async () => {
 onDestroy(() => {
     // 停止音频播放
     if (audio) {
+        audio.removeEventListener("timeupdate", handleAudioTimeUpdate);
+        audio.removeEventListener("ended", handleAudioEnded);
         audio.pause();
         audio.src = "";
         audio.load();
@@ -548,22 +561,25 @@ onDestroy(() => {
         player.pause();
     }
 
-    
     document.removeEventListener("wheel", globalHandleWheel);
     document.removeEventListener("keydown", handleKeydown);
     document.removeEventListener("keyup", handleKeyup);
-
     window.removeEventListener("beforeunload", handleExit);
+
+    // 清理 canvas 事件监听器
+    if (notesEditorCanvas) {
+        notesEditorCanvas.removeEventListener("click", handleNotesEditorClick);
+    }
+    if (eventSequenceEditorCanvas) {
+        eventSequenceEditorCanvas.removeEventListener("click", handleEventEditorClick);
+    }
+    if (playerCanvas) {
+        playerCanvas.removeEventListener("click", handlePlayerClick);
+        playerCanvas.removeEventListener("pointerup", handlePlayerPointerUp);
+    }
 
     if (KPASettings.autosaveEnabled) {
         AutoSaveRunner.stop();
-    }
-    // 清理编辑器
-    if (notesEditor) {
-        // 如果有清理方法，调用它
-    }
-    if (eventSequenceEditors) {
-        // 如果有清理方法，调用它
     }
     // 移除全局引用
     // @ts-expect-error 仅供调试

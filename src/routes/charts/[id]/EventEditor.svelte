@@ -56,9 +56,7 @@ class EasingCanvas extends EventTarget {
                 this.elementMatrixInverted,
                 identity
             );
-            console.log(this.selectionManager, offset)
             const selection = this.selectionManager.click(offset);
-            console.log(selection)
             if (selection && !this.holding) {
                 this.holding = selection.target;
             }
@@ -127,7 +125,6 @@ class EasingCanvas extends EventTarget {
                 }
             } else {
                 if (lastPoint) {
-                    console.log(lastPoint, (i + pad) - lastPoint)
                     bgPath.rect(lastPoint, h / 6, (i + pad) - lastPoint, h / 3);
                     lastPoint = null;
                 }
@@ -168,7 +165,6 @@ class EasingCanvas extends EventTarget {
         checkForbidden();
         if (this.holding) {
             context.fillStyle = "#f006";
-            console.log(bgPath)
             context.fill(bgPath);
         }
         context.lineWidth = 3;
@@ -457,7 +453,6 @@ class EasingCanvas extends EventTarget {
     () => evaluatorType,
     (op) => {
         evaluatorType = op;
-        console.log(evaluatorType)
         if (op === EASED) {
             operationList.do(new Op.EventNodeEvaluatorChangeOperation(
                 getStartNode(target),

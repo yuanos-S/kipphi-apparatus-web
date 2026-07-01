@@ -84,7 +84,6 @@
                         (val) => {
                             KPASettings.lang = val;
                             locale.set(val);
-                            console.log("Locale changed.", val);
                         }
                     }
                 ></PopupOption>

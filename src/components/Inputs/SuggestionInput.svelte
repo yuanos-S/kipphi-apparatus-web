@@ -14,7 +14,6 @@
     let suggestions = $state([] as string[])
     async function deliverSuggestions(e: Event) {
         suggestions = await getSuggestions((e.target as HTMLInputElement).value);
-        console.log(suggestions)
         displaysSuggestions = true;
     }
     let timer: number = null;
@@ -27,7 +26,6 @@ bind:value
 onchange={() => {
     // 设置一个防抖，因为后面点击了一下li之前已经触发了一次input的onchange，那个时候的文本内容可能是不准确的
     timer = setTimeout(() => {
-        console.log(value)
         onchange?.(value)
     }, 150)
 }}
@@ -40,7 +38,6 @@ onfocusout={() => setTimeout(() => displaysSuggestions = false, 100)}>
         <li class="suggestion" role="button" onclick={() => {
             value = suggestion;
             onchange?.(suggestion);
-            console.log("cto")
             if (timer) clearTimeout(timer);
             timer = null;
         }}>

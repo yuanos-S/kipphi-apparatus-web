@@ -57,7 +57,6 @@
       isPopupVisible = true;
       const rect = buttonRef.getBoundingClientRect();
       tick().then(() => {
-        console.log(rect)
         if (rect.top < window.innerHeight / 2) {
           popupRef.style.top = `${rect.bottom}px`;
         } else {

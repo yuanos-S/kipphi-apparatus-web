@@ -285,7 +285,6 @@ export async function saveChart(chartId: string, chart: Chart, summary: string, 
     });
 
     await saveChartMeta(chartId, chartMeta);
-    console.log("Chart saved to IndexedDB:", `charts/${chartId}/${chartPath}`);
     await dbPut(STORE_CHARTS, `charts/${chartId}/${chartPath}`, chartStr);
 }
 

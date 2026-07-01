@@ -38,7 +38,6 @@ export async function convertPEZ(chartId: string): Promise<ArrayBuffer> {
     }
     const musicExt = mime.getExtension(music.type)
     const illustrationExt = mime.getExtension(illustration.type)
-    console.log(illustration.type, illustrationExt)
     const rpe = toRPE(chart);
     const infoTxt =
 `#

@@ -47,7 +47,7 @@
         updateOptions();
     })
 
-    onMount(() => {console.log(options)})
+    onMount(() => {})
 
 </script>
 

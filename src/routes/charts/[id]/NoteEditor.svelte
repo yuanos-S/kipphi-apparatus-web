@@ -79,8 +79,6 @@ $effect(() => { // 如果用derived的话，响应式变量会是不可写的，
 let parentSeq = $derived(values.parentNode?.parentSeq)
 let parentLine = $derived(parentSeq?.parentLine)
 
-console.log(operationList)
-
 operationList.addEventListener("needsupdate", (opev) => {
     const operation = opev.operation;
     const clazz = operation.constructor;
@@ -95,7 +93,6 @@ operationList.addEventListener("needsupdate", (opev) => {
             op = operation as
             (Op.NoteTypeChangeOperation | Op.NotePropChangeOperation<any> | Op.HoldEndTimeChangeOperation
             | Op.NoteTimeChangeOperation | Op.NoteYOffsetChangeOperation | Op.NoteSpeedChangeOperation);
-            console.log("op")
             if (op.note !== target) { return; }
             break;
         default:
