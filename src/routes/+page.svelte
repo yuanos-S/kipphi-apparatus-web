@@ -4,8 +4,8 @@
   import ImageLoader from "#/components/ImageLoader.svelte";
   import { base } from "$app/paths";
   import { 
-    Settings, Download, FolderPlus, FilePlus, Trash2, 
-    Upload, X, Check 
+    Settings, Download, FilePlus, Trash2, 
+    X, Check 
   } from "@lucide/svelte";
   import { goto } from "$app/navigation";
 
@@ -49,33 +49,6 @@
     showImportModal = false;
     importStatus = "";
   }
-
-  // ========== 文件夹拖拽导入 ==========
-  let isDragOver = $state(false);
-
-  function handleDragOver(e: DragEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    isDragOver = true;
-  }
-  function handleDragLeave(e: DragEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    isDragOver = false;
-  }
-  function handleDrop(e: DragEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    isDragOver = false;
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0) {
-      importStatus = "识别中...";
-      setTimeout(() => {
-        importStatus = "识别成功";
-        setTimeout(() => goto(`${base}/import`), 600);
-      }, 800);
-    }
-  }
 </script>
 
 <svelte:window onkeydown={(e) => { if (e.key === "Escape") showImportModal = false; }} />
@@ -111,28 +84,6 @@
         </div>
         <span class="card-label">新建谱面</span>
       </a>
-      <div
-        class="feature-card folder-card"
-        class:drop-active={isDragOver}
-        role="link"
-        tabindex="0"
-        onclick={handleImportClick}
-        onkeydown={(e: KeyboardEvent) => { if (e.key === "Enter") handleImportClick(); }}
-        ondragover={handleDragOver}
-        ondragleave={handleDragLeave}
-        ondrop={handleDrop}
-      >
-        <div class="card-icon">
-          <FolderPlus size="48" />
-        </div>
-        <span class="card-label">新建文件夹</span>
-        {#if isDragOver}
-          <div class="drop-overlay">
-            <Upload size="32" />
-            <span>释放以导入</span>
-          </div>
-        {/if}
-      </div>
       <a href="{base}/trash" class="feature-card">
         <div class="card-icon">
           <Trash2 size="48" />
@@ -334,32 +285,6 @@
     font-size: 1.1em;
     font-weight: 500;
     color: var(--color-foreground);
-  }
-
-  /* 文件夹卡片拖拽 */
-  .folder-card {
-    position: relative;
-    overflow: hidden;
-  }
-  .folder-card.drop-active {
-    border-color: #6df;
-    box-shadow: 0 0 20px rgba(102, 221, 255, 0.4);
-    background: rgba(102, 221, 255, 0.08);
-  }
-  .drop-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(102, 221, 255, 0.15);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4em;
-    color: #6df;
-    font-size: 0.9em;
-    font-weight: bold;
-    pointer-events: none;
-    border-radius: 14px;
   }
 
   /* 谱面列表 */
