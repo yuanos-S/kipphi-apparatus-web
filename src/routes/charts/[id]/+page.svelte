@@ -524,12 +524,6 @@ onMount(async () => {
         }
     });
 
-    // 移动端：阻止 touchstart 后的 mousedown 模拟事件
-    // 否则 downHandler 会被调用两次，第二次调用会将 wasEditing 重置为 false
-    notesEditorCanvas.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-    }, { passive: false });
-
     // 放置模式下，每次 pointerup 后强制恢复编辑状态
     // 防止移动端轻微移动导致 wasEditing 被 reset 从而退出编辑模式
     playerCanvas.addEventListener("pointerup", () => {
@@ -972,7 +966,8 @@ updateTip();
         max-width: 100%;
     }
     #player {
-        height: var(--actual-player-height); 
+        height: var(--actual-player-height);
+        touch-action: none;
     }
     #ne {
         position: absolute;
@@ -980,6 +975,7 @@ updateTip();
         height: var(--actual-player-height);
         left: 0;
         transition: 0.3s opacity ease;
+        touch-action: none;
         //opacity: 0.3;
     }
     #ece {
@@ -988,6 +984,7 @@ updateTip();
         height: var(--actual-player-height);
         right: 0;
         transition: 0.3s opacity ease;
+        touch-action: none;
         //opacity: 0.3;
     }
     #ne:hover, #ece:hover {
