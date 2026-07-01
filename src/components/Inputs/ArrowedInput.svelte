@@ -89,8 +89,8 @@ span {
 }
 
 .up, .down {
-    background-color: white;
-    color: black;
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
     border-radius: 2px;
     font-size: var(--font-size-smaller);
 }

@@ -494,6 +494,24 @@ onMount(async () => {
         }
     });
 
+    // 移动端：iOS 上 touchstart→touchend→mousedown 依次触发，
+    // touchend 后状态已恢复为 edit，mousedown 会再次触发 downHandler 创建重复音符。
+    // 使用 capture 阶段拦截 mousedown，阻止其到达 NotesEditor 的 handler。
+    if (isMobileDevice()) {
+        notesEditorCanvas.addEventListener("mousedown", (e) => {
+            if (get(notesEditChecked)) {
+                e.stopImmediatePropagation();
+            }
+        }, true);
+    }
+
+    // 放置模式下，每次 pointerup 后强制恢复编辑状态
+    playerCanvas.addEventListener("pointerup", () => {
+        if (get(notesEditChecked)) {
+            notesEditor.state = NotesEditorState.edit;
+        }
+    });
+
     // 释放内存
     // data.chart = null;
 });
@@ -777,6 +795,9 @@ updateTip();
         --bottom-tips-height: 4vh;
         --player-width: calc(100vw - 50vh);
         --color-foreground: white;
+        --color-surface: #555;
+        --color-border: #666;
+        --color-foreground-muted: #aaa;
     }
     .container {
         display: grid;

@@ -47,7 +47,7 @@
     .respack {
         box-sizing: border-box;
         border-radius: var(--border-radius);
-        background-color: #eee3;
+        background-color: var(--color-border);
         padding: 1vh;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr 1fr;

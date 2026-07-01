@@ -42,8 +42,8 @@
         top: @top;
         transition: 0.7s ease-out transform;
         transform: translate(0, 0);
-        background-color: white;
-        color: black;
+        background-color: var(--color-surface);
+        color: var(--color-foreground);
         border-left: var(--border-radius) solid;
         border-radius: var(--border-radius);
         padding: var(--border-radius);

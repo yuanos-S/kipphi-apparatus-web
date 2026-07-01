@@ -53,15 +53,15 @@
 }
 
 .icon-button:hover {
-    background-color: #2222;
+    background-color: var(--color-border);
 }
 
 .icon-button.primary {
-    background-color: white;
-    color: black;
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
 }
 .icon-button.primary:hover {
-    background-color: #eee;
+    background-color: var(--color-border);
 }
 
 

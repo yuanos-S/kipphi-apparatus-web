@@ -20,7 +20,8 @@ div[role="form"], li[role="form"] {
     align-self: center;
     text-align: start;
     gap: 0.25em;
-    background-color: azure;
+    background-color: var(--color-form-bg, azure);
+    color: var(--color-foreground);
     padding: 1em;
     border-radius: 0.5em;
     box-shadow: 0.25em 0.25em 0.25em rgba(0, 0, 0, 0.25);

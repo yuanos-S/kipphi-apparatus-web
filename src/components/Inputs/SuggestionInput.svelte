@@ -79,7 +79,8 @@ onfocusout={() => setTimeout(() => displaysSuggestions = false, 100)}>
         margin: 0;
         display: flex;
         flex-direction: column;
-        background-color: white;
+        background-color: var(--color-surface);
+        color: var(--color-foreground);
         box-shadow: var(--box-shadow);
         padding-block: var(--border-radius);
         padding-inline: 0;

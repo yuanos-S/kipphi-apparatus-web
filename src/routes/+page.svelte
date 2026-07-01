@@ -103,7 +103,8 @@
   }
 
   footer {
-    background-color: #f8f9fa;
+    background-color: var(--color-surface);
+    color: var(--color-foreground);
     padding: 0.2em 0.3em;
     border-bottom-right-radius: 3px;
     border-top-left-radius: 3px;
@@ -129,7 +130,7 @@
   .chart {
     display: block;
     border-radius: 10px;
-    background-color: #f8f9fa44;
+    background-color: var(--color-card-bg, rgba(255,255,255,0.1));
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     clip-path: fill-box;
     position: relative;
