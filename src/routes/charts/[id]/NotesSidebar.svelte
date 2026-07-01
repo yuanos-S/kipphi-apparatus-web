@@ -55,6 +55,11 @@
 <Label>{$_("main.sidebar.notes")}</Label>
 <TextSwitchButton wide bgText={$_("main.notes.addNote")}
     onText="+" offText="-" bind:checked={$notesEditChecked}/>
+{#if $notesEditChecked}
+    <div class="placement-warning">
+        ⚠ {$_("main.notes.dragToPlace") ?? "请拖动以放置音符，否则会出现问题"}
+    </div>
+{/if}
 <TextSwitchButton wide
     bind:checked={$notesAbove}
     onText={$_("main.note.above")}
@@ -121,5 +126,15 @@
     .flex {
         display: flex;
         align-items: center;
+    }
+    .placement-warning {
+        color: #ffc107;
+        font-size: var(--font-size-smaller);
+        text-align: center;
+        padding: 0.3em 0.5em;
+        background: rgba(255, 193, 7, 0.1);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        line-height: 1.3;
     }
 </style>

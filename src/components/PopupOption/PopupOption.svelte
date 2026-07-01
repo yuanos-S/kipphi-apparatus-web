@@ -262,7 +262,7 @@
   }
 
   .option-item.selected {
-    background-color: #e3f2fd;
+    background-color: var(--color-primary-bg);
     font-weight: bold;
   }
 
