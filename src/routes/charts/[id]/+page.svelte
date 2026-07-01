@@ -3,12 +3,15 @@ import { Player, AudioProcessor, Images } from "kipphi-player";
 import { EventSequenceEditors, NotesEditor, NotesEditorState } from "kipphi-canvas-editor";
 import type { PageData } from "./$types";
 import { onMount, tick, onDestroy } from "svelte";
+import { get } from "svelte/store";
 import { Chart, EventEndNode, EventStartNode, EventType, KPAError, NoteType, Op as O, TC, type ExtendedEventTypeName } from "kipphi";
 
 import { _ } from "#/i18n";
+import { isMobileDevice } from "#/userData";
 
 import AutoSaveRunner from "./autosaveRunner";
 
+import FloatingButton from "#/components/FloatingButton.svelte";
 import PlayButton from "#/components/IconButtons/PlayButton.svelte";
 import GridSwitch from "#/components/IconButtons/GridSwitch.svelte";
 import PopupOption from "#/components/PopupOption/PopupOption.svelte";
@@ -143,6 +146,7 @@ let judgeLinesManager: JudgeLines;
 let progressBar: HTMLInputElement;
 // let playButton: PlayButton;
 let isPlaying = $state(false);
+let placementActive = $state(false);
 let showingGrid = $state(true);
 let speed = $state("1.0x");
 let preservesPitch = $state(true);
@@ -357,6 +361,30 @@ const play = async () => {
     player.play();
 }
 
+const togglePlay = () => {
+    if (isPlaying) {
+        player.pause();
+    } else {
+        play();
+    }
+};
+
+const saveChart = async () => {
+    const chart = operationList.chart;
+    if (!chart) return;
+    try {
+        const { saveChart: save } = await import("./save");
+        await save(chart, "update");
+        notify($_("main.saved"), "success");
+    } catch (e) {
+        notify("Save failed: " + (e instanceof Error ? e.message : String(e)), "error");
+    }
+};
+
+const enterFullscreen = () => {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+};
+
 document.addEventListener("wheel", globalHandleWheel);
 document.addEventListener("keydown", handleKeydown);
 document.addEventListener("keyup", handleKeyup);
@@ -446,6 +474,10 @@ onMount(async () => {
         notify("Error: " + e.error.message, "error")
     })
     notesEditor.addEventListener("noteselected", (ev) => {
+        // 放置模式下：不切换侧边栏，保持在编辑模式以便连续放置音符
+        if (placementActive) {
+            return;
+        }
         selectedNote.set(ev.note);
         activeSecondarySidebar.set(SecondarySidebar.NOTE);
     });
@@ -785,6 +817,22 @@ updateTip();
             <Redo2 size={"4vh"} opacity={redoAvailable ? 1 : 0.2} onclick={() => operationList.redo()}/>
         </div>
     </div>
+    <FloatingButton
+        onPlayPause={togglePlay}
+        onUndo={() => operationList.undo()}
+        onRedo={() => operationList.redo()}
+        onNoteTypeSelect={(type) => {
+            notesNoteType.set(type);
+            notesEditChecked.set(true);
+            placementActive = true;
+            notesEditor.state = NotesEditorState.edit;
+            notesEditor.noteType = type;
+        }}
+        {placementActive}
+        {isPlaying}
+        onSave={saveChart}
+        onFullscreen={enterFullscreen}
+    />
 </main>
 {/if}
 
@@ -875,13 +923,17 @@ updateTip();
         background-color: #555;
         z-index: 1;
         padding: 1vh;
-        
         box-sizing: border-box;
         scrollbar-width: none;
+        /* Safari 安全区适配：顶部刘海 + 右侧边缘 */
+        padding-top: max(1vh, env(safe-area-inset-top, 0px));
+        padding-right: max(1vh, env(safe-area-inset-right, 0px));
+        height: calc(var(--player-height) - env(safe-area-inset-bottom, 0px));
     }
     #secondary-sidebar {
         right: 20vh;
         width: 30vh;
+        padding-right: max(1vh, env(safe-area-inset-right, 0px));
     }
 
     .sidebar-shadow {
