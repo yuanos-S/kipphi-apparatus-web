@@ -839,6 +839,7 @@ updateTip();
         // 直接设置编辑器状态为编辑模式，确保首次点击即可放置音符
         notesEditor.state = NotesEditorState.edit;
         notesEditor.noteType = type;
+        notify("请拖动以放置音符，否则会出现问题", "warn");
     }}
     onFinish={() => {
         notesEditChecked.set(false);
