@@ -4,8 +4,8 @@
   import ImageLoader from "#/components/ImageLoader.svelte";
   import { base } from "$app/paths";
   import { 
-    Settings, Download, Github, FolderPlus, Music, Trash2, 
-    Upload, X, Check, Globe, Palette, Package 
+    Settings, Download, FolderPlus, FilePlus, Trash2, 
+    Upload, X, Check 
   } from "@lucide/svelte";
   import { goto } from "$app/navigation";
 
@@ -40,12 +40,9 @@
     const file = input.files?.[0];
     if (!file) return;
     importStatus = "识别中...";
-    // 跳转到导入页面处理
     setTimeout(() => {
       importStatus = "识别成功";
-      setTimeout(() => {
-        goto(`${base}/import`);
-      }, 600);
+      setTimeout(() => goto(`${base}/import`), 600);
     }, 800);
   }
   function closeImportModal() {
@@ -53,17 +50,35 @@
     importStatus = "";
   }
 
-  // ========== 设置下拉 ==========
-  let showSettingsDropdown = $state(false);
-  function toggleSettingsDropdown() {
-    showSettingsDropdown = !showSettingsDropdown;
+  // ========== 文件夹拖拽导入 ==========
+  let isDragOver = $state(false);
+
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    isDragOver = true;
   }
-  function closeSettingsDropdown() {
-    showSettingsDropdown = false;
+  function handleDragLeave(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    isDragOver = false;
+  }
+  function handleDrop(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    isDragOver = false;
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      importStatus = "识别中...";
+      setTimeout(() => {
+        importStatus = "识别成功";
+        setTimeout(() => goto(`${base}/import`), 600);
+      }, 800);
+    }
   }
 </script>
 
-<svelte:window onclick={() => { showSettingsDropdown = false; }} onkeydown={(e) => { if (e.key === "Escape") { showSettingsDropdown = false; showImportModal = false; } }} />
+<svelte:window onkeydown={(e) => { if (e.key === "Escape") showImportModal = false; }} />
 
 <main class="container">
   <!-- ========== 顶栏 ========== -->
@@ -80,24 +95,9 @@
       <button class="icon-btn" onclick={handleImportClick} title="导入">
         <Download size="22" />
       </button>
-      <div class="settings-wrapper">
-        <button class="icon-btn" onclick={(e: MouseEvent) => { e.stopPropagation(); toggleSettingsDropdown(); }} title="设置">
-          <Settings size="22" />
-        </button>
-        {#if showSettingsDropdown}
-          <div class="settings-dropdown" onclick={(e: MouseEvent) => e.stopPropagation()}>
-            <a href="{base}/settings" class="dropdown-item">
-              <Globe size="18" />{$_("settings.language") ?? "语言"}
-            </a>
-            <a href="{base}/settings" class="dropdown-item">
-              <Palette size="18" />{$_("settings.personalization") ?? "个性化"}
-            </a>
-            <a href="{base}/settings" class="dropdown-item">
-              <Package size="18" />{$_("settings.respack") ?? "资源包"}
-            </a>
-          </div>
-        {/if}
-      </div>
+      <a href="{base}/settings" class="icon-btn" title="设置">
+        <Settings size="22" />
+      </a>
     </div>
   </header>
 
@@ -105,19 +105,34 @@
   <div class="main-content">
     <!-- 三大功能卡片 -->
     <div class="feature-cards">
-      <a href="{base}/charts" class="feature-card">
-        <div class="card-icon">
-          <Music size="48" />
-        </div>
-        <span class="card-label">谱面</span>
-      </a>
       <a href="{base}/create" class="feature-card">
+        <div class="card-icon">
+          <FilePlus size="48" />
+        </div>
+        <span class="card-label">新建谱面</span>
+      </a>
+      <div
+        class="feature-card folder-card"
+        class:drop-active={isDragOver}
+        role="link"
+        tabindex="0"
+        onclick={() => goto(`${base}/create`)}
+        onkeydown={(e: KeyboardEvent) => { if (e.key === "Enter") goto(`${base}/create`); }}
+        ondragover={handleDragOver}
+        ondragleave={handleDragLeave}
+        ondrop={handleDrop}
+      >
         <div class="card-icon">
           <FolderPlus size="48" />
         </div>
-        <span class="card-label">新谱</span>
-        <span class="new-badge">NEW</span>
-      </a>
+        <span class="card-label">新建文件夹</span>
+        {#if isDragOver}
+          <div class="drop-overlay">
+            <Upload size="32" />
+            <span>释放以导入</span>
+          </div>
+        {/if}
+      </div>
       <a href="{base}/trash" class="feature-card">
         <div class="card-icon">
           <Trash2 size="48" />
@@ -156,17 +171,6 @@
       {/if}
     </div>
   </div>
-
-  <!-- ========== 底栏 ========== -->
-  <footer class="bottombar">
-    <a href="https://github.com/TeamZincs/kipphi-apparatus" target="_blank" rel="noopener" class="footer-icon" title="原版仓库">
-      <Github size="20" />
-    </a>
-    <span class="copyright">Kipphi Apparatus &copy; 2025 TeamZincs, MIT Licensed.</span>
-    <a href="https://github.com/yuanos-S/kipphi-apparatus-web" target="_blank" rel="noopener" class="footer-icon" title="Web版仓库">
-      <Github size="20" />
-    </a>
-  </footer>
 </main>
 
 <!-- ========== 导入弹窗 ========== -->
@@ -265,44 +269,13 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    text-decoration: none;
+    box-sizing: border-box;
   }
   .icon-btn:hover {
     background: rgba(102, 221, 255, 0.2);
     border-color: rgba(102, 221, 255, 0.3);
-  }
-  .settings-wrapper {
-    position: relative;
-  }
-  .settings-dropdown {
-    position: absolute;
-    top: 110%;
-    right: 0;
-    background: #1e1e3a;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 10px;
-    padding: 0.4em;
-    min-width: 160px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    z-index: 20;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
-    padding: 0.5em 0.8em;
-    color: #ddd;
     text-decoration: none;
-    border-radius: 6px;
-    font-size: 0.95em;
-    transition: background 0.15s;
-  }
-  .dropdown-item:hover {
-    background: rgba(102, 221, 255, 0.15);
-    text-decoration: none;
-    color: #fff;
   }
 
   /* ========== 主体内容 ========== */
@@ -362,17 +335,31 @@
     font-weight: 500;
     color: var(--color-foreground);
   }
-  .new-badge {
+
+  /* 文件夹卡片拖拽 */
+  .folder-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .folder-card.drop-active {
+    border-color: #6df;
+    box-shadow: 0 0 20px rgba(102, 221, 255, 0.4);
+    background: rgba(102, 221, 255, 0.08);
+  }
+  .drop-overlay {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    background: #6df;
-    color: #1a1a2e;
-    font-size: 0.65em;
+    inset: 0;
+    background: rgba(102, 221, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    color: #6df;
+    font-size: 0.9em;
     font-weight: bold;
-    padding: 0.15em 0.4em;
-    border-radius: 4px;
-    letter-spacing: 0.5px;
+    pointer-events: none;
+    border-radius: 14px;
   }
 
   /* 谱面列表 */
@@ -475,34 +462,6 @@
   .edit-link { transition-delay: 0.15s; background: rgba(102, 221, 255, 0.3); }
   .export-link { transition-delay: 0.3s; background: rgba(255, 255, 255, 0.2); }
   .delete-link { color: #ff6b6b; transition-delay: 0.45s; background: rgba(255, 107, 107, 0.2); }
-
-  /* ========== 底栏 ========== */
-  .bottombar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    padding: 0.6em 1.2em;
-    box-sizing: border-box;
-    position: sticky;
-    bottom: 0;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
-  }
-  .footer-icon {
-    color: #aaa;
-    transition: color 0.2s, transform 0.2s;
-    display: flex;
-    align-items: center;
-  }
-  .footer-icon:hover {
-    color: #6df;
-    transform: scale(1.1);
-  }
-  .copyright {
-    color: #888;
-    font-size: 0.8em;
-    text-align: center;
-  }
 
   /* ========== 导入弹窗 ========== */
   .modal-overlay {
@@ -608,8 +567,6 @@
     .chart { height: 18vh; min-height: 100px; }
     .chart-title { font-size: 100%; padding: 0.15em 0.5em; }
     .chart-operations a, .chart-operations span { font-size: 2.5vh; transform: translateX(-35vw); }
-    .bottombar { padding: 0.4em 0.8em; }
-    .copyright { font-size: 0.7em; }
     .main-content { padding: 1em 0.5em; }
   }
 </style>
