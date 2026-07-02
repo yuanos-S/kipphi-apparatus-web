@@ -1,6 +1,5 @@
 <script>
   import { page } from "$app/stores";
-  import { _ } from "#/i18n";
 </script>
 
 <div class="bsod">
@@ -32,9 +31,11 @@
       有关此问题的详细信息和可能的解决方法，请访问
       <a href="https://github.com/yuanos-S/kipphi-apparatus-web" target="_blank" rel="noopener">https://github.com/yuanos-S/kipphi-apparatus-web</a>
     </p>
-    {#if $page.error?.message}
-      <p class="bsod-error">错误代码: {$page.error.message}</p>
-    {/if}
+    <p class="bsod-error">
+      {#if $page.error?.message}
+        错误代码: {$page.error.message}
+      {/if}
+    </p>
     {#if $page.status}
       <p class="bsod-status">HTTP {$page.status}</p>
     {/if}
